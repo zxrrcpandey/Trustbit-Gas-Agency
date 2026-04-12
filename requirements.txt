@@ -1,0 +1,1 @@
+# Frappe and ERPNext are installed at bench level

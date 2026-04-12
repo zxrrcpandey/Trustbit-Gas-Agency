@@ -1,0 +1,107 @@
+{
+  "actions": [],
+  "creation": "2026-04-11 00:00:00.000000",
+  "doctype": "DocType",
+  "engine": "InnoDB",
+  "field_order": [
+    "general_section",
+    "enable_auto_exchange",
+    "create_exchange_on",
+    "column_break_1",
+    "auto_submit_stock_entry",
+    "enable_kg_tracking",
+    "defaults_section",
+    "default_company",
+    "column_break_2",
+    "default_exchange_warehouse"
+  ],
+  "fields": [
+    {
+      "fieldname": "general_section",
+      "fieldtype": "Section Break",
+      "label": "General Settings"
+    },
+    {
+      "default": "1",
+      "fieldname": "enable_auto_exchange",
+      "fieldtype": "Check",
+      "label": "Enable Auto Cylinder Exchange",
+      "description": "Automatically create empty cylinder stock entry when filled cylinders are sold"
+    },
+    {
+      "default": "Both",
+      "fieldname": "create_exchange_on",
+      "fieldtype": "Select",
+      "label": "Create Exchange On",
+      "options": "Sales Invoice\nDelivery Note\nBoth",
+      "depends_on": "eval:doc.enable_auto_exchange"
+    },
+    {
+      "fieldname": "column_break_1",
+      "fieldtype": "Column Break"
+    },
+    {
+      "default": "1",
+      "fieldname": "auto_submit_stock_entry",
+      "fieldtype": "Check",
+      "label": "Auto Submit Stock Entry",
+      "description": "Automatically submit the created Stock Entry for empty cylinders"
+    },
+    {
+      "default": "1",
+      "fieldname": "enable_kg_tracking",
+      "fieldtype": "Check",
+      "label": "Enable KG Tracking",
+      "description": "Track weight in KG for cylinder exchanges"
+    },
+    {
+      "fieldname": "defaults_section",
+      "fieldtype": "Section Break",
+      "label": "Defaults"
+    },
+    {
+      "fieldname": "default_company",
+      "fieldtype": "Link",
+      "label": "Default Company",
+      "options": "Company"
+    },
+    {
+      "fieldname": "column_break_2",
+      "fieldtype": "Column Break"
+    },
+    {
+      "fieldname": "default_exchange_warehouse",
+      "fieldtype": "Link",
+      "label": "Default Exchange Warehouse",
+      "options": "Warehouse",
+      "description": "Default warehouse for receiving empty cylinders"
+    }
+  ],
+  "issingle": 1,
+  "links": [],
+  "modified": "2026-04-11 00:00:00.000000",
+  "modified_by": "Administrator",
+  "module": "Trustbit Gas Agency",
+  "name": "Gas Agency Settings",
+  "owner": "Administrator",
+  "permissions": [
+    {
+      "create": 1,
+      "delete": 1,
+      "email": 1,
+      "print": 1,
+      "read": 1,
+      "role": "System Manager",
+      "share": 1,
+      "write": 1
+    },
+    {
+      "read": 1,
+      "role": "Stock Manager",
+      "write": 1
+    }
+  ],
+  "sort_field": "modified",
+  "sort_order": "DESC",
+  "track_changes": 1
+}

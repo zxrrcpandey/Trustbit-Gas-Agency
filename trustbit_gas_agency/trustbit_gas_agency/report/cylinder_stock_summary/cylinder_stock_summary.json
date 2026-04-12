@@ -1,0 +1,28 @@
+{
+  "add_total_row": 1,
+  "columns": [],
+  "creation": "2026-04-11 00:00:00.000000",
+  "disabled": 0,
+  "docstatus": 0,
+  "doctype": "Report",
+  "is_standard": "Yes",
+  "modified": "2026-04-11 00:00:00.000000",
+  "modified_by": "Administrator",
+  "module": "Trustbit Gas Agency",
+  "name": "Cylinder Stock Summary",
+  "owner": "Administrator",
+  "ref_doctype": "Bin",
+  "report_name": "Cylinder Stock Summary",
+  "report_type": "Script Report",
+  "roles": [
+    {
+      "role": "Stock Manager"
+    },
+    {
+      "role": "Stock User"
+    },
+    {
+      "role": "System Manager"
+    }
+  ]
+}

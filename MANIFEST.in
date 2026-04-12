@@ -1,0 +1,18 @@
+include MANIFEST.in
+include requirements.txt
+include *.json
+include *.md
+include *.py
+include *.txt
+recursive-include trustbit_gas_agency *.css
+recursive-include trustbit_gas_agency *.csv
+recursive-include trustbit_gas_agency *.html
+recursive-include trustbit_gas_agency *.ico
+recursive-include trustbit_gas_agency *.js
+recursive-include trustbit_gas_agency *.json
+recursive-include trustbit_gas_agency *.md
+recursive-include trustbit_gas_agency *.png
+recursive-include trustbit_gas_agency *.py
+recursive-include trustbit_gas_agency *.svg
+recursive-include trustbit_gas_agency *.txt
+recursive-exclude trustbit_gas_agency *.pyc

@@ -1,0 +1,161 @@
+{
+  "actions": [],
+  "autoname": "field:location_name",
+  "creation": "2026-04-11 00:00:00.000000",
+  "doctype": "DocType",
+  "engine": "InnoDB",
+  "field_order": [
+    "location_details_section",
+    "location_name",
+    "company",
+    "is_active",
+    "column_break_1",
+    "contact_person",
+    "contact_phone",
+    "address",
+    "warehouse_section",
+    "warehouse",
+    "column_break_2",
+    "default_target_warehouse",
+    "accounts_section",
+    "cost_center",
+    "column_break_3",
+    "pos_profile"
+  ],
+  "fields": [
+    {
+      "fieldname": "location_details_section",
+      "fieldtype": "Section Break",
+      "label": "Location Details"
+    },
+    {
+      "fieldname": "location_name",
+      "fieldtype": "Data",
+      "label": "Location Name",
+      "reqd": 1,
+      "unique": 1,
+      "in_list_view": 1
+    },
+    {
+      "fieldname": "company",
+      "fieldtype": "Link",
+      "label": "Company",
+      "options": "Company",
+      "reqd": 1,
+      "in_list_view": 1
+    },
+    {
+      "default": "1",
+      "fieldname": "is_active",
+      "fieldtype": "Check",
+      "label": "Is Active"
+    },
+    {
+      "fieldname": "column_break_1",
+      "fieldtype": "Column Break"
+    },
+    {
+      "fieldname": "contact_person",
+      "fieldtype": "Data",
+      "label": "Contact Person"
+    },
+    {
+      "fieldname": "contact_phone",
+      "fieldtype": "Data",
+      "label": "Contact Phone",
+      "options": "Phone"
+    },
+    {
+      "fieldname": "address",
+      "fieldtype": "Link",
+      "label": "Address",
+      "options": "Address"
+    },
+    {
+      "fieldname": "warehouse_section",
+      "fieldtype": "Section Break",
+      "label": "Warehouse"
+    },
+    {
+      "fieldname": "warehouse",
+      "fieldtype": "Link",
+      "label": "Warehouse",
+      "options": "Warehouse",
+      "reqd": 1,
+      "description": "Primary warehouse for filled cylinder stock"
+    },
+    {
+      "fieldname": "column_break_2",
+      "fieldtype": "Column Break"
+    },
+    {
+      "fieldname": "default_target_warehouse",
+      "fieldtype": "Link",
+      "label": "Empty Cylinder Warehouse",
+      "options": "Warehouse",
+      "description": "Warehouse for receiving empty cylinders on exchange"
+    },
+    {
+      "fieldname": "accounts_section",
+      "fieldtype": "Section Break",
+      "label": "Accounts & POS"
+    },
+    {
+      "fieldname": "cost_center",
+      "fieldtype": "Link",
+      "label": "Cost Center",
+      "options": "Cost Center"
+    },
+    {
+      "fieldname": "column_break_3",
+      "fieldtype": "Column Break"
+    },
+    {
+      "fieldname": "pos_profile",
+      "fieldtype": "Link",
+      "label": "POS Profile",
+      "options": "POS Profile",
+      "description": "For POS Awesome integration"
+    }
+  ],
+  "links": [],
+  "modified": "2026-04-11 00:00:00.000000",
+  "modified_by": "Administrator",
+  "module": "Trustbit Gas Agency",
+  "name": "Gas Agency Location",
+  "naming_rule": "By fieldname",
+  "owner": "Administrator",
+  "permissions": [
+    {
+      "create": 1,
+      "delete": 1,
+      "email": 1,
+      "export": 1,
+      "print": 1,
+      "read": 1,
+      "report": 1,
+      "role": "System Manager",
+      "share": 1,
+      "write": 1
+    },
+    {
+      "create": 1,
+      "email": 1,
+      "export": 1,
+      "print": 1,
+      "read": 1,
+      "report": 1,
+      "role": "Stock Manager",
+      "share": 1,
+      "write": 1
+    },
+    {
+      "read": 1,
+      "role": "Stock User"
+    }
+  ],
+  "sort_field": "modified",
+  "sort_order": "DESC",
+  "title_field": "location_name",
+  "track_changes": 1
+}

@@ -1,0 +1,76 @@
+[
+  {
+    "doctype": "Custom Field",
+    "name": "Sales Invoice-gas_agency_location",
+    "dt": "Sales Invoice",
+    "fieldname": "gas_agency_location",
+    "fieldtype": "Link",
+    "label": "Gas Agency Location",
+    "options": "Gas Agency Location",
+    "insert_after": "set_warehouse",
+    "module": "Trustbit Gas Agency",
+    "owner": "Administrator"
+  },
+  {
+    "doctype": "Custom Field",
+    "name": "Sales Invoice Item-is_gas_cylinder",
+    "dt": "Sales Invoice Item",
+    "fieldname": "is_gas_cylinder",
+    "fieldtype": "Check",
+    "label": "Is Gas Cylinder",
+    "insert_after": "item_code",
+    "read_only": 1,
+    "module": "Trustbit Gas Agency",
+    "owner": "Administrator"
+  },
+  {
+    "doctype": "Custom Field",
+    "name": "Sales Invoice Item-cylinder_exchange_rule",
+    "dt": "Sales Invoice Item",
+    "fieldname": "cylinder_exchange_rule",
+    "fieldtype": "Link",
+    "label": "Cylinder Exchange Rule",
+    "options": "Cylinder Exchange Rule",
+    "insert_after": "is_gas_cylinder",
+    "read_only": 1,
+    "module": "Trustbit Gas Agency",
+    "owner": "Administrator"
+  },
+  {
+    "doctype": "Custom Field",
+    "name": "Delivery Note-gas_agency_location",
+    "dt": "Delivery Note",
+    "fieldname": "gas_agency_location",
+    "fieldtype": "Link",
+    "label": "Gas Agency Location",
+    "options": "Gas Agency Location",
+    "insert_after": "set_warehouse",
+    "module": "Trustbit Gas Agency",
+    "owner": "Administrator"
+  },
+  {
+    "doctype": "Custom Field",
+    "name": "Delivery Note Item-is_gas_cylinder",
+    "dt": "Delivery Note Item",
+    "fieldname": "is_gas_cylinder",
+    "fieldtype": "Check",
+    "label": "Is Gas Cylinder",
+    "insert_after": "item_code",
+    "read_only": 1,
+    "module": "Trustbit Gas Agency",
+    "owner": "Administrator"
+  },
+  {
+    "doctype": "Custom Field",
+    "name": "Delivery Note Item-cylinder_exchange_rule",
+    "dt": "Delivery Note Item",
+    "fieldname": "cylinder_exchange_rule",
+    "fieldtype": "Link",
+    "label": "Cylinder Exchange Rule",
+    "options": "Cylinder Exchange Rule",
+    "insert_after": "is_gas_cylinder",
+    "read_only": 1,
+    "module": "Trustbit Gas Agency",
+    "owner": "Administrator"
+  }
+]

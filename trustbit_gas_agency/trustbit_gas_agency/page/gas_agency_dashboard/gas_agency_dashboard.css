@@ -1,0 +1,72 @@
+.gas-agency-dashboard {
+    padding: 15px;
+}
+
+.summary-card {
+    flex: 1;
+    min-width: 200px;
+    padding: 20px;
+    border-radius: 8px;
+    background: var(--card-bg);
+    border: 1px solid var(--border-color);
+    text-align: center;
+}
+
+.summary-card .card-value {
+    font-size: 28px;
+    font-weight: 700;
+    color: var(--text-color);
+    margin-bottom: 5px;
+}
+
+.summary-card .card-label {
+    font-size: 12px;
+    color: var(--text-muted);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.summary-card.filled {
+    border-left: 4px solid var(--blue-500);
+}
+
+.summary-card.empty {
+    border-left: 4px solid var(--orange-500);
+}
+
+.summary-card.sales {
+    border-left: 4px solid var(--green-500);
+}
+
+.summary-card.revenue {
+    border-left: 4px solid var(--purple-500);
+}
+
+.stock-table table,
+.exchange-logs-table table {
+    width: 100%;
+    border-collapse: collapse;
+}
+
+.stock-table th,
+.stock-table td,
+.exchange-logs-table th,
+.exchange-logs-table td {
+    padding: 8px 12px;
+    border: 1px solid var(--border-color);
+    text-align: left;
+}
+
+.stock-table th,
+.exchange-logs-table th {
+    background: var(--subtle-bg);
+    font-weight: 600;
+    font-size: 12px;
+    text-transform: uppercase;
+    color: var(--text-muted);
+}
+
+.stock-table td,
+.exchange-logs-table td {
+    font-size: 13px;
+}
