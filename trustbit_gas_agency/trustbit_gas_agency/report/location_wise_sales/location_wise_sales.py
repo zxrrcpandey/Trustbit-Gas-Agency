@@ -73,16 +73,14 @@ def get_data(filters):
         conditions += " AND si.gas_agency_location = %(location)s"
         values["location"] = filters["location"]
 
-    # Sales data
+    # Invoice-level aggregates (no item join, so grand_total is counted once)
     sales_data = frappe.db.sql(
         """
         SELECT
             si.gas_agency_location as location,
-            COUNT(DISTINCT si.name) as total_invoices,
-            SUM(sii.qty) as total_qty,
+            COUNT(si.name) as total_invoices,
             SUM(si.grand_total) as total_revenue
         FROM `tabSales Invoice` si
-        LEFT JOIN `tabSales Invoice Item` sii ON sii.parent = si.name
         WHERE {conditions}
         AND si.gas_agency_location IS NOT NULL
         AND si.gas_agency_location != ''
@@ -93,50 +91,75 @@ def get_data(filters):
         as_dict=True,
     )
 
-    # Exchange data
-    exchange_conditions = "status = 'Completed'"
+    # Item-level qty aggregated separately
+    qty_data = frappe.db.sql(
+        """
+        SELECT
+            si.gas_agency_location as location,
+            SUM(sii.qty) as total_qty
+        FROM `tabSales Invoice` si
+        INNER JOIN `tabSales Invoice Item` sii ON sii.parent = si.name
+        WHERE {conditions}
+        AND si.gas_agency_location IS NOT NULL
+        AND si.gas_agency_location != ''
+        GROUP BY si.gas_agency_location
+        """.format(conditions=conditions),
+        values,
+        as_dict=True,
+    )
+    qty_map = {d.location: flt(d.total_qty) for d in qty_data}
+
+    # Exchange data — the company filter applies via the location master
+    exchange_conditions = "cxl.status = 'Completed'"
     exchange_values = {}
 
     if filters and filters.get("from_date"):
-        exchange_conditions += " AND exchange_date >= %(from_date)s"
+        exchange_conditions += " AND cxl.exchange_date >= %(from_date)s"
         exchange_values["from_date"] = filters["from_date"]
 
     if filters and filters.get("to_date"):
-        exchange_conditions += " AND exchange_date <= %(to_date)s"
+        exchange_conditions += " AND cxl.exchange_date <= %(to_date)s"
         exchange_values["to_date"] = filters["to_date"]
 
     if filters and filters.get("location"):
-        exchange_conditions += " AND location = %(location)s"
+        exchange_conditions += " AND cxl.location = %(location)s"
         exchange_values["location"] = filters["location"]
+
+    if filters and filters.get("company"):
+        exchange_conditions += " AND loc.company = %(company)s"
+        exchange_values["company"] = filters["company"]
 
     exchange_data = frappe.db.sql(
         """
         SELECT
-            location,
+            cxl.location,
             COUNT(*) as total_exchanges,
-            SUM(weight_kg) as total_kg_exchanged
-        FROM `tabCylinder Exchange Log`
+            SUM(cxl.weight_kg) as total_kg_exchanged
+        FROM `tabCylinder Exchange Log` cxl
+        LEFT JOIN `tabGas Agency Location` loc ON loc.name = cxl.location
         WHERE {conditions}
-        AND location IS NOT NULL
-        AND location != ''
-        GROUP BY location
-        ORDER BY location
+        AND cxl.location IS NOT NULL
+        AND cxl.location != ''
+        GROUP BY cxl.location
+        ORDER BY cxl.location
         """.format(conditions=exchange_conditions),
         exchange_values,
         as_dict=True,
     )
 
+    sales_map = {d.location: d for d in sales_data}
     exchange_map = {d.location: d for d in exchange_data}
 
-    # Merge
+    # Merge over the union so exchange-only locations are not dropped
     data = []
-    for row in sales_data:
-        exchange = exchange_map.get(row.location, {})
+    for location in sorted(set(sales_map) | set(exchange_map)):
+        sales = sales_map.get(location, {})
+        exchange = exchange_map.get(location, {})
         data.append({
-            "location": row.location,
-            "total_invoices": row.total_invoices or 0,
-            "total_qty": flt(row.total_qty),
-            "total_revenue": flt(row.total_revenue),
+            "location": location,
+            "total_invoices": sales.get("total_invoices") or 0,
+            "total_qty": flt(qty_map.get(location, 0)),
+            "total_revenue": flt(sales.get("total_revenue")),
             "total_exchanges": exchange.get("total_exchanges", 0),
             "total_kg_exchanged": flt(exchange.get("total_kg_exchanged", 0)),
         })

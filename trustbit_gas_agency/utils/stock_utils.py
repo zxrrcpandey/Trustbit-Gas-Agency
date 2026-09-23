@@ -2,11 +2,6 @@ import frappe
 from frappe.utils import nowdate, add_days, flt
 
 
-def update_dashboard_cache():
-    """Daily scheduled task to update dashboard cache (placeholder for future optimization)."""
-    pass
-
-
 @frappe.whitelist()
 def get_dashboard_data(location=None, from_date=None, to_date=None, company=None):
     """
@@ -17,10 +12,8 @@ def get_dashboard_data(location=None, from_date=None, to_date=None, company=None
         from_date = add_days(nowdate(), -30)
     if not to_date:
         to_date = nowdate()
-
-    filters = {}
-    if company:
-        filters["company"] = company
+    if not company:
+        company = frappe.get_cached_doc("Gas Agency Settings").default_company
 
     locations = _get_locations(location, company)
 
@@ -28,7 +21,7 @@ def get_dashboard_data(location=None, from_date=None, to_date=None, company=None
         "stock_summary": _get_stock_summary(locations),
         "sales_summary": _get_sales_summary(locations, from_date, to_date),
         "revenue_summary": _get_revenue_summary(locations, from_date, to_date),
-        "exchange_logs": _get_recent_exchange_logs(location),
+        "exchange_logs": _get_recent_exchange_logs(locations, from_date, to_date),
     }
 
 
@@ -157,19 +150,28 @@ def _get_revenue_summary(locations, from_date, to_date):
     return summary
 
 
-def _get_recent_exchange_logs(location=None):
-    """Get recent cylinder exchange logs."""
-    filters = {"status": "Completed"}
-    if location:
-        filters["location"] = location
+def _get_recent_exchange_logs(locations, from_date=None, to_date=None):
+    """Get recent cylinder exchange logs — all statuses, so failures stay visible.
+
+    Scoped to the same resolved location set as the other dashboard panels,
+    so the company filter applies here too. Logs without a location cannot be
+    attributed to any company, so they are always shown rather than buried.
+    """
+    filters = {}
+    if from_date and to_date:
+        filters["exchange_date"] = ["between", [from_date, to_date]]
 
     return frappe.get_all(
         "Cylinder Exchange Log",
         filters=filters,
+        or_filters=[
+            ["location", "in", [loc.name for loc in locations]],
+            ["location", "is", "not set"],
+        ],
         fields=[
             "name", "source_doctype", "source_name", "location",
             "filled_item", "empty_item", "qty", "weight_kg",
-            "exchange_date", "status", "stock_entry",
+            "exchange_date", "status", "stock_entry", "error_message",
         ],
         order_by="creation desc",
         limit_page_length=20,

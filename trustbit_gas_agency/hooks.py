@@ -38,10 +38,3 @@ fixtures = [
         "filters": [["module", "=", "Trustbit Gas Agency"]],
     }
 ]
-
-# Scheduled Tasks
-scheduler_events = {
-    "daily": [
-        "trustbit_gas_agency.utils.stock_utils.update_dashboard_cache",
-    ]
-}

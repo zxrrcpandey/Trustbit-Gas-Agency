@@ -127,6 +127,21 @@ function render_summary_cards(page, data) {
     });
 }
 
+function escape_html(value) {
+    if (value === null || value === undefined) {
+        return "";
+    }
+    return String(value).replace(/[&<>"']/g, function (c) {
+        return {
+            "&": "&amp;",
+            "<": "&lt;",
+            ">": "&gt;",
+            '"': "&quot;",
+            "'": "&#39;",
+        }[c];
+    });
+}
+
 function render_stock_table(page, stock_summary) {
     var $container = page.main.find(".stock-table");
     $container.empty();
@@ -147,11 +162,11 @@ function render_stock_table(page, stock_summary) {
 
     stock_summary.forEach(function (row) {
         html += "<tr>" +
-            "<td>" + row.location + "</td>" +
-            "<td>" + row.filled_qty + "</td>" +
-            "<td>" + row.empty_qty + "</td>" +
-            "<td>" + row.filled_kg.toFixed(2) + "</td>" +
-            "<td>" + row.empty_kg.toFixed(2) + "</td>" +
+            "<td>" + escape_html(row.location) + "</td>" +
+            "<td>" + escape_html(row.filled_qty) + "</td>" +
+            "<td>" + escape_html(row.empty_qty) + "</td>" +
+            "<td>" + escape_html(row.filled_kg.toFixed(2)) + "</td>" +
+            "<td>" + escape_html(row.empty_kg.toFixed(2)) + "</td>" +
             "</tr>";
     });
 
@@ -218,34 +233,46 @@ function render_exchange_logs(page, logs) {
         "<th>" + __("Empty Item") + "</th>" +
         "<th>" + __("Qty") + "</th>" +
         "<th>" + __("KG") + "</th>" +
+        "<th>" + __("Status") + "</th>" +
         "<th>" + __("Stock Entry") + "</th>" +
         "</tr></thead><tbody>";
 
+    var status_colors = { Completed: "green", Cancelled: "orange", Error: "red" };
+
     logs.forEach(function (log) {
-        var source_link =
-            '<a href="/app/' +
-            frappe.router.slug(log.source_doctype) +
+        var source_href =
+            "/app/" +
+            encodeURIComponent(frappe.router.slug(log.source_doctype)) +
             "/" +
-            log.source_name +
-            '">' +
-            log.source_name +
-            "</a>";
+            encodeURIComponent(log.source_name);
+        var source_link =
+            '<a href="' + source_href + '">' + escape_html(log.source_name) + "</a>";
         var se_link = log.stock_entry
             ? '<a href="/app/stock-entry/' +
-              log.stock_entry +
+              encodeURIComponent(log.stock_entry) +
               '">' +
-              log.stock_entry +
+              escape_html(log.stock_entry) +
               "</a>"
             : "-";
 
+        var status_pill =
+            '<span class="indicator-pill ' +
+            (status_colors[log.status] || "gray") +
+            '" title="' +
+            escape_html(log.error_message || "") +
+            '">' +
+            escape_html(log.status) +
+            "</span>";
+
         html += "<tr>" +
-            "<td>" + frappe.datetime.str_to_user(log.exchange_date) + "</td>" +
+            "<td>" + escape_html(frappe.datetime.str_to_user(log.exchange_date)) + "</td>" +
             "<td>" + source_link + "</td>" +
-            "<td>" + (log.location || "-") + "</td>" +
-            "<td>" + log.filled_item + "</td>" +
-            "<td>" + log.empty_item + "</td>" +
-            "<td>" + log.qty + "</td>" +
-            "<td>" + (log.weight_kg || 0).toFixed(2) + "</td>" +
+            "<td>" + escape_html(log.location || "-") + "</td>" +
+            "<td>" + escape_html(log.filled_item) + "</td>" +
+            "<td>" + escape_html(log.empty_item) + "</td>" +
+            "<td>" + escape_html(log.qty) + "</td>" +
+            "<td>" + escape_html((log.weight_kg || 0).toFixed(2)) + "</td>" +
+            "<td>" + status_pill + "</td>" +
             "<td>" + se_link + "</td>" +
             "</tr>";
     });

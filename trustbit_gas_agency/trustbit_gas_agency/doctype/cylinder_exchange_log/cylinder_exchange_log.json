@@ -160,7 +160,7 @@
     }
   ],
   "links": [],
-  "modified": "2026-04-11 00:00:00.000000",
+  "modified": "2026-07-09 00:00:00.000000",
   "modified_by": "Administrator",
   "module": "Trustbit Gas Agency",
   "name": "Cylinder Exchange Log",
@@ -190,6 +190,11 @@
     {
       "read": 1,
       "role": "Stock User"
+    },
+    {
+      "read": 1,
+      "report": 1,
+      "role": "Accounts User"
     }
   ],
   "sort_field": "modified",
