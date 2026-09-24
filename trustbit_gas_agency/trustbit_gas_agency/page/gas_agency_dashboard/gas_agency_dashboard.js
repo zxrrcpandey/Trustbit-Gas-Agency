@@ -5,7 +5,9 @@ frappe.pages["gas-agency-dashboard"].on_page_load = function (wrapper) {
         single_column: true,
     });
 
-    page.main.html(frappe.render_template("gas_agency_dashboard"));
+    // Append, don't replace: page.main already holds the page's filter bar,
+    // which the fields below are added to
+    page.main.append(frappe.render_template("gas_agency_dashboard"));
 
     // Add filters
     // Filled with the company's active locations on each refresh
