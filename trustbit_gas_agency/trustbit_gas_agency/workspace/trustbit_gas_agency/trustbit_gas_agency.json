@@ -1,12 +1,12 @@
 {
   "charts": [],
-  "content": "[{\"id\":\"tga_header_1\",\"type\":\"header\",\"data\":{\"text\":\"<span class=\\\"h4\\\"><b>Your Shortcuts</b></span>\",\"col\":12}},{\"id\":\"tga_shortcut_1\",\"type\":\"shortcut\",\"data\":{\"shortcut_name\":\"Dashboard\",\"col\":3}},{\"id\":\"tga_shortcut_2\",\"type\":\"shortcut\",\"data\":{\"shortcut_name\":\"Exchange Rules\",\"col\":3}},{\"id\":\"tga_shortcut_3\",\"type\":\"shortcut\",\"data\":{\"shortcut_name\":\"Locations\",\"col\":3}},{\"id\":\"tga_shortcut_4\",\"type\":\"shortcut\",\"data\":{\"shortcut_name\":\"Exchange Logs\",\"col\":3}},{\"id\":\"tga_header_2\",\"type\":\"header\",\"data\":{\"text\":\"<span class=\\\"h4\\\"><b>Setup</b></span>\",\"col\":12}},{\"id\":\"tga_link_1\",\"type\":\"link\",\"data\":{\"link_type\":\"DocType\",\"link_to\":\"Gas Agency Settings\",\"col\":4}},{\"id\":\"tga_link_2\",\"type\":\"link\",\"data\":{\"link_type\":\"DocType\",\"link_to\":\"Gas Agency Location\",\"col\":4}},{\"id\":\"tga_link_3\",\"type\":\"link\",\"data\":{\"link_type\":\"DocType\",\"link_to\":\"Cylinder Exchange Rule\",\"col\":4}},{\"id\":\"tga_header_3\",\"type\":\"header\",\"data\":{\"text\":\"<span class=\\\"h4\\\"><b>Transactions</b></span>\",\"col\":12}},{\"id\":\"tga_link_4\",\"type\":\"link\",\"data\":{\"link_type\":\"DocType\",\"link_to\":\"Cylinder Exchange Log\",\"col\":4}},{\"id\":\"tga_header_4\",\"type\":\"header\",\"data\":{\"text\":\"<span class=\\\"h4\\\"><b>Reports</b></span>\",\"col\":12}},{\"id\":\"tga_link_5\",\"type\":\"link\",\"data\":{\"link_type\":\"Report\",\"link_to\":\"Cylinder Stock Summary\",\"col\":4}},{\"id\":\"tga_link_6\",\"type\":\"link\",\"data\":{\"link_type\":\"Report\",\"link_to\":\"Location Wise Sales\",\"col\":4}}]",
+  "content": "[{\"id\":\"tga_header_1\",\"type\":\"header\",\"data\":{\"text\":\"<span class=\\\"h4\\\"><b>Your Shortcuts</b></span>\",\"col\":12}},{\"id\":\"tga_shortcut_1\",\"type\":\"shortcut\",\"data\":{\"shortcut_name\":\"Dashboard\",\"col\":3}},{\"id\":\"tga_shortcut_2\",\"type\":\"shortcut\",\"data\":{\"shortcut_name\":\"Exchange Rules\",\"col\":3}},{\"id\":\"tga_shortcut_3\",\"type\":\"shortcut\",\"data\":{\"shortcut_name\":\"Locations\",\"col\":3}},{\"id\":\"tga_shortcut_4\",\"type\":\"shortcut\",\"data\":{\"shortcut_name\":\"Exchange Logs\",\"col\":3}},{\"id\":\"tga_spacer_1\",\"type\":\"spacer\",\"data\":{\"col\":12}},{\"id\":\"tga_header_2\",\"type\":\"header\",\"data\":{\"text\":\"<span class=\\\"h4\\\"><b>Reports &amp; Masters</b></span>\",\"col\":12}},{\"id\":\"tga_card_1\",\"type\":\"card\",\"data\":{\"card_name\":\"Setup\",\"col\":4}},{\"id\":\"tga_card_2\",\"type\":\"card\",\"data\":{\"card_name\":\"Transactions\",\"col\":4}},{\"id\":\"tga_card_3\",\"type\":\"card\",\"data\":{\"card_name\":\"Reports\",\"col\":4}}]",
   "creation": "2026-04-11 00:00:00.000000",
   "docstatus": 0,
   "doctype": "Workspace",
   "for_user": "",
   "hide_custom": 0,
-  "icon": "flame",
+  "icon": "retail",
   "idx": 0,
   "is_default": 0,
   "is_standard": 1,
@@ -26,7 +26,7 @@
       "hidden": 0,
       "is_query_report": 0,
       "label": "Setup",
-      "link_count": 0,
+      "link_count": 3,
       "onboard": 0,
       "type": "Card Break"
     },
@@ -64,7 +64,7 @@
       "hidden": 0,
       "is_query_report": 0,
       "label": "Transactions",
-      "link_count": 0,
+      "link_count": 1,
       "onboard": 0,
       "type": "Card Break"
     },
@@ -82,7 +82,7 @@
       "hidden": 0,
       "is_query_report": 0,
       "label": "Reports",
-      "link_count": 0,
+      "link_count": 2,
       "onboard": 0,
       "type": "Card Break"
     },
@@ -107,7 +107,7 @@
       "type": "Link"
     }
   ],
-  "modified": "2026-04-11 00:00:00.000000",
+  "modified": "2026-09-24 00:00:00.000000",
   "modified_by": "Administrator",
   "module": "Trustbit Gas Agency",
   "name": "Trustbit Gas Agency",
