@@ -1,7 +1,7 @@
 frappe.pages["gas-agency-dashboard"].on_page_load = function (wrapper) {
     var page = frappe.ui.make_app_page({
         parent: wrapper,
-        title: __("Gas Agency Dashboard"),
+        title: __("Dashboard Stats"),
         single_column: true,
     });
 
