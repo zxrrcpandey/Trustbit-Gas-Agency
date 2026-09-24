@@ -6,7 +6,7 @@
   "docstatus": 0,
   "doctype": "Report",
   "is_standard": "Yes",
-  "modified": "2026-04-11 00:00:00.000000",
+  "modified": "2026-09-24 00:00:00.000000",
   "modified_by": "Administrator",
   "module": "Trustbit Gas Agency",
   "name": "Location Wise Sales",
@@ -16,13 +16,10 @@
   "report_type": "Script Report",
   "roles": [
     {
-      "role": "Stock Manager"
+      "role": "Accounts User"
     },
     {
       "role": "Accounts Manager"
-    },
-    {
-      "role": "System Manager"
     }
   ]
 }

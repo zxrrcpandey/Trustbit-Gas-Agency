@@ -1,7 +1,11 @@
 frappe.ui.form.on("Delivery Note", {
     refresh: function (frm) {
         // Show cylinder exchange info if location is set
-        if (frm.doc.gas_agency_location && frm.doc.docstatus === 1) {
+        if (
+            frm.doc.gas_agency_location &&
+            frm.doc.docstatus === 1 &&
+            frappe.model.can_read("Cylinder Exchange Log")
+        ) {
             frm.add_custom_button(
                 __("View Exchange Logs"),
                 function () {

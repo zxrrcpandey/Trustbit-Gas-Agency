@@ -8,6 +8,12 @@ def get_dashboard_data(location=None, from_date=None, to_date=None, company=None
     Get dashboard data for Gas Agency Dashboard page.
     Returns stock summary, sales summary, revenue, and recent exchange logs.
     """
+    # The data below is read without permission checks, so apply the Gas
+    # Agency Dashboard page's access (its roles plus any added in Role
+    # Permission for Page and Report) to the API itself
+    if not frappe.get_cached_doc("Page", "gas-agency-dashboard").is_permitted():
+        raise frappe.PermissionError
+
     if not from_date:
         from_date = add_days(nowdate(), -30)
     if not to_date:
@@ -114,6 +120,8 @@ def _get_sales_summary(locations, from_date, to_date):
                 "gas_agency_location": loc.name,
                 "posting_date": ["between", [from_date, to_date]],
                 "docstatus": 1,
+                # Credit notes are not sales (revenue already nets them out)
+                "is_return": 0,
             },
         )
         summary.append({

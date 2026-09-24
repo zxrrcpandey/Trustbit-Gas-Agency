@@ -73,12 +73,13 @@ def get_data(filters):
         conditions += " AND si.gas_agency_location = %(location)s"
         values["location"] = filters["location"]
 
-    # Invoice-level aggregates (no item join, so grand_total is counted once)
+    # Invoice-level aggregates (no item join, so grand_total is counted once).
+    # Counts are of sales only; amounts net credit notes out.
     sales_data = frappe.db.sql(
         """
         SELECT
             si.gas_agency_location as location,
-            COUNT(si.name) as total_invoices,
+            SUM(CASE WHEN si.is_return = 0 THEN 1 ELSE 0 END) as total_invoices,
             SUM(si.grand_total) as total_revenue
         FROM `tabSales Invoice` si
         WHERE {conditions}
@@ -91,12 +92,13 @@ def get_data(filters):
         as_dict=True,
     )
 
-    # Item-level qty aggregated separately
+    # Item-level qty aggregated separately, in stock UOM so rows sold in
+    # different UOMs add up and match the exchange figures
     qty_data = frappe.db.sql(
         """
         SELECT
             si.gas_agency_location as location,
-            SUM(sii.qty) as total_qty
+            SUM(sii.stock_qty) as total_qty
         FROM `tabSales Invoice` si
         INNER JOIN `tabSales Invoice Item` sii ON sii.parent = si.name
         WHERE {conditions}
@@ -129,11 +131,13 @@ def get_data(filters):
         exchange_conditions += " AND loc.company = %(company)s"
         exchange_values["company"] = filters["company"]
 
+    # Return give-backs are logged with negative qty/KG: count receipts only,
+    # and let the KG total net the returns out
     exchange_data = frappe.db.sql(
         """
         SELECT
             cxl.location,
-            COUNT(*) as total_exchanges,
+            SUM(CASE WHEN cxl.qty > 0 THEN 1 ELSE 0 END) as total_exchanges,
             SUM(cxl.weight_kg) as total_kg_exchanged
         FROM `tabCylinder Exchange Log` cxl
         LEFT JOIN `tabGas Agency Location` loc ON loc.name = cxl.location
