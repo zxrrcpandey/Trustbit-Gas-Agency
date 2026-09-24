@@ -27,6 +27,8 @@ def get_dashboard_data(location=None, from_date=None, to_date=None, company=None
     cylinders = _get_cylinder_items()
 
     return {
+        # Every active location of the company, for the Location dropdown
+        "location_options": [loc.name for loc in _get_locations(company=company)],
         "locations": [
             _get_location_summary(loc, cylinders, from_date, to_date) for loc in locations
         ],

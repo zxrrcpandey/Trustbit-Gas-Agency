@@ -8,11 +8,12 @@ frappe.pages["gas-agency-dashboard"].on_page_load = function (wrapper) {
     page.main.html(frappe.render_template("gas_agency_dashboard"));
 
     // Add filters
+    // Filled with the company's active locations on each refresh
     page.location_filter = page.add_field({
         fieldname: "location",
         label: __("Location"),
-        fieldtype: "Link",
-        options: "Gas Agency Location",
+        fieldtype: "Select",
+        options: [{ value: "", label: __("All Locations") }],
         change: function () {
             refresh_dashboard(page);
         },
@@ -65,11 +66,30 @@ function refresh_dashboard(page) {
         "trustbit_gas_agency.utils.stock_utils.get_dashboard_data",
         filters
     ).then(function (data) {
+        if (!update_location_options(page, data.location_options || [])) {
+            // The selected location isn't in this company; clearing it refreshes again
+            return;
+        }
         render_summary_cards(page, data.locations || []);
         render_location_table(page, data.locations || []);
         render_sales_trend(page, data.daily_sales || []);
         render_exchange_logs(page, data.exchange_logs);
     });
+}
+
+function update_location_options(page, location_names) {
+    // Returns false when the selection had to be cleared (its change handler refreshes)
+    var field = page.fields_dict.location;
+    var selected = field.get_value();
+
+    field.df.options = [{ value: "", label: __("All Locations") }].concat(location_names);
+    field.set_options(selected);
+
+    if (selected && location_names.indexOf(selected) === -1) {
+        field.set_value("");
+        return false;
+    }
+    return true;
 }
 
 function sum(rows, field) {
