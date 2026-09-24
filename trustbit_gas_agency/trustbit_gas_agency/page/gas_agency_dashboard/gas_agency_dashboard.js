@@ -9,19 +9,23 @@ frappe.pages["gas-agency-dashboard"].on_page_load = function (wrapper) {
     // which the fields below are added to
     page.main.append(frappe.render_template("gas_agency_dashboard"));
 
-    // Add filters: Company, then its locations, then the dates
+    // Add filters: Company, then its locations, then the dates. Both
+    // dropdowns are filled from the dashboard data on each refresh; the
+    // default company is offered up front so it can be pre-selected.
+    var default_company = frappe.defaults.get_default("company") || "";
     page.company_filter = page.add_field({
         fieldname: "company",
         label: __("Company"),
-        fieldtype: "Link",
-        options: "Company",
-        default: frappe.defaults.get_default("company"),
+        fieldtype: "Select",
+        options: [{ value: "", label: __("All Companies") }].concat(
+            default_company ? [default_company] : []
+        ),
+        default: default_company,
         change: function () {
             refresh_dashboard(page);
         },
     });
 
-    // Filled with the company's active locations on each refresh
     page.location_filter = page.add_field({
         fieldname: "location",
         label: __("Location"),
@@ -68,8 +72,13 @@ function refresh_dashboard(page) {
         "trustbit_gas_agency.utils.stock_utils.get_dashboard_data",
         filters
     ).then(function (data) {
-        if (!update_location_options(page, data.location_options || [])) {
-            // The selected location isn't in this company; clearing it refreshes again
+        var fields = page.fields_dict;
+        if (
+            !set_select_options(fields.company, __("All Companies"), data.company_options || []) ||
+            !set_select_options(fields.location, __("All Locations"), data.location_options || [])
+        ) {
+            // A selection is no longer offered (e.g. a location of another
+            // company); clearing it refreshes the dashboard again
             return;
         }
         render_summary_cards(page, data.locations || []);
@@ -79,15 +88,14 @@ function refresh_dashboard(page) {
     });
 }
 
-function update_location_options(page, location_names) {
+function set_select_options(field, all_label, names) {
     // Returns false when the selection had to be cleared (its change handler refreshes)
-    var field = page.fields_dict.location;
     var selected = field.get_value();
 
-    field.df.options = [{ value: "", label: __("All Locations") }].concat(location_names);
+    field.df.options = [{ value: "", label: all_label }].concat(names);
     field.set_options(selected);
 
-    if (selected && location_names.indexOf(selected) === -1) {
+    if (selected && names.indexOf(selected) === -1) {
         field.set_value("");
         return false;
     }

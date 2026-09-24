@@ -20,14 +20,15 @@ def get_dashboard_data(location=None, from_date=None, to_date=None, company=None
         from_date = add_days(nowdate(), -30)
     if not to_date:
         to_date = nowdate()
-    if not company:
-        company = frappe.get_cached_doc("Gas Agency Settings").default_company
 
+    # No company means all companies
     locations = _get_locations(location, company)
     cylinders = _get_cylinder_items()
 
     return {
-        # Every active location of the company, for the Location dropdown
+        # Dropdown choices: every company, and the active locations of the
+        # chosen company (of all companies when none is chosen)
+        "company_options": frappe.get_all("Company", pluck="name", order_by="name asc"),
         "location_options": [loc.name for loc in _get_locations(company=company)],
         "locations": [
             _get_location_summary(loc, cylinders, from_date, to_date) for loc in locations
