@@ -1,0 +1,26 @@
+{
+  "content": null,
+  "creation": "2026-09-25 01:00:00.000000",
+  "docstatus": 0,
+  "doctype": "Page",
+  "modified": "2026-09-25 01:00:00.000000",
+  "modified_by": "Administrator",
+  "module": "Trustbit Gas Agency",
+  "name": "dashboard-list-view",
+  "owner": "Administrator",
+  "page_name": "dashboard-list-view",
+  "roles": [
+    {
+      "role": "System Manager"
+    },
+    {
+      "role": "Stock Manager"
+    },
+    {
+      "role": "Stock User"
+    }
+  ],
+  "standard": "Yes",
+  "system_page": 0,
+  "title": "Dashboard List View"
+}

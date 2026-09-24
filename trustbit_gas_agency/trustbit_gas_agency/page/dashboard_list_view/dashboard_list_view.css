@@ -1,0 +1,78 @@
+.list-dashboard {
+    padding: 15px;
+}
+
+.list-dashboard-sections {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(560px, 1fr));
+    gap: 20px;
+}
+
+.list-section {
+    border: 1px solid var(--border-color);
+    border-radius: 8px;
+    background: var(--card-bg);
+    display: flex;
+    flex-direction: column;
+    min-width: 0;
+}
+
+.list-section-head {
+    padding: 12px 14px 4px;
+}
+
+.list-section-head h5 {
+    margin: 0;
+    font-weight: 600;
+}
+
+.list-section-head .note {
+    font-size: 12px;
+    color: var(--text-muted);
+}
+
+.list-section-body {
+    padding: 8px 14px;
+    overflow-x: auto;
+    flex: 1;
+}
+
+.list-section-body table {
+    width: 100%;
+    border-collapse: collapse;
+}
+
+.list-section-body th,
+.list-section-body td {
+    padding: 6px 8px;
+    border-bottom: 1px solid var(--border-color);
+    text-align: left;
+    font-size: 12px;
+    white-space: nowrap;
+}
+
+.list-section-body th {
+    color: var(--text-muted);
+    font-weight: 600;
+    text-transform: uppercase;
+}
+
+.list-section-body .num {
+    text-align: right;
+}
+
+.list-section-body .error-text {
+    white-space: normal;
+    min-width: 200px;
+    color: var(--red-600);
+}
+
+.list-section-foot {
+    padding: 8px 14px 12px;
+    font-size: 12px;
+}
+
+.list-section-foot .more-link {
+    margin-right: 14px;
+    cursor: pointer;
+}

@@ -1,6 +1,6 @@
 {
   "charts": [],
-  "content": "[{\"id\":\"tga_header_1\",\"type\":\"header\",\"data\":{\"text\":\"<span class=\\\"h4\\\"><b>Your Shortcuts</b></span>\",\"col\":12}},{\"id\":\"tga_shortcut_1\",\"type\":\"shortcut\",\"data\":{\"shortcut_name\":\"Dashboard Stats\",\"col\":3}},{\"id\":\"tga_shortcut_2\",\"type\":\"shortcut\",\"data\":{\"shortcut_name\":\"Exchange Rules\",\"col\":3}},{\"id\":\"tga_shortcut_3\",\"type\":\"shortcut\",\"data\":{\"shortcut_name\":\"Locations\",\"col\":3}},{\"id\":\"tga_shortcut_4\",\"type\":\"shortcut\",\"data\":{\"shortcut_name\":\"Exchange Logs\",\"col\":3}},{\"id\":\"tga_spacer_1\",\"type\":\"spacer\",\"data\":{\"col\":12}},{\"id\":\"tga_header_2\",\"type\":\"header\",\"data\":{\"text\":\"<span class=\\\"h4\\\"><b>Reports &amp; Masters</b></span>\",\"col\":12}},{\"id\":\"tga_card_1\",\"type\":\"card\",\"data\":{\"card_name\":\"Setup\",\"col\":4}},{\"id\":\"tga_card_2\",\"type\":\"card\",\"data\":{\"card_name\":\"Transactions\",\"col\":4}},{\"id\":\"tga_card_3\",\"type\":\"card\",\"data\":{\"card_name\":\"Reports\",\"col\":4}}]",
+  "content": "[{\"id\":\"tga_header_1\",\"type\":\"header\",\"data\":{\"text\":\"<span class=\\\"h4\\\"><b>Your Shortcuts</b></span>\",\"col\":12}},{\"id\":\"tga_shortcut_1\",\"type\":\"shortcut\",\"data\":{\"shortcut_name\":\"Dashboard Stats\",\"col\":3}},{\"id\":\"tga_shortcut_5\",\"type\":\"shortcut\",\"data\":{\"shortcut_name\":\"Dashboard List View\",\"col\":3}},{\"id\":\"tga_shortcut_2\",\"type\":\"shortcut\",\"data\":{\"shortcut_name\":\"Exchange Rules\",\"col\":3}},{\"id\":\"tga_shortcut_3\",\"type\":\"shortcut\",\"data\":{\"shortcut_name\":\"Locations\",\"col\":3}},{\"id\":\"tga_shortcut_4\",\"type\":\"shortcut\",\"data\":{\"shortcut_name\":\"Exchange Logs\",\"col\":3}},{\"id\":\"tga_spacer_1\",\"type\":\"spacer\",\"data\":{\"col\":12}},{\"id\":\"tga_header_2\",\"type\":\"header\",\"data\":{\"text\":\"<span class=\\\"h4\\\"><b>Reports &amp; Masters</b></span>\",\"col\":12}},{\"id\":\"tga_card_1\",\"type\":\"card\",\"data\":{\"card_name\":\"Setup\",\"col\":4}},{\"id\":\"tga_card_2\",\"type\":\"card\",\"data\":{\"card_name\":\"Transactions\",\"col\":4}},{\"id\":\"tga_card_3\",\"type\":\"card\",\"data\":{\"card_name\":\"Reports\",\"col\":4}}]",
   "creation": "2026-04-11 00:00:00.000000",
   "docstatus": 0,
   "doctype": "Workspace",
@@ -18,6 +18,16 @@
       "label": "Dashboard Stats",
       "link_count": 0,
       "link_to": "gas-agency-dashboard",
+      "link_type": "Page",
+      "onboard": 1,
+      "type": "Link"
+    },
+    {
+      "hidden": 0,
+      "is_query_report": 0,
+      "label": "Dashboard List View",
+      "link_count": 0,
+      "link_to": "dashboard-list-view",
       "link_type": "Page",
       "onboard": 1,
       "type": "Link"
@@ -107,7 +117,7 @@
       "type": "Link"
     }
   ],
-  "modified": "2026-09-25 00:00:00.000000",
+  "modified": "2026-09-25 01:00:00.000000",
   "modified_by": "Administrator",
   "module": "Trustbit Gas Agency",
   "name": "Trustbit Gas Agency",
@@ -123,6 +133,13 @@
       "doc_view": "",
       "label": "Dashboard Stats",
       "link_to": "gas-agency-dashboard",
+      "type": "Page"
+    },
+    {
+      "color": "Cyan",
+      "doc_view": "",
+      "label": "Dashboard List View",
+      "link_to": "dashboard-list-view",
       "type": "Page"
     },
     {
