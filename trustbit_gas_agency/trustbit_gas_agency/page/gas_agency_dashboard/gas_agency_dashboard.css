@@ -2,10 +2,25 @@
     padding: 15px;
 }
 
+.gas-agency-dashboard .dashboard-section {
+    margin-bottom: 25px;
+}
+
+.gas-agency-dashboard .dashboard-section h4 {
+    margin-bottom: 10px;
+}
+
+.summary-cards {
+    display: flex;
+    gap: 15px;
+    margin-bottom: 25px;
+    flex-wrap: wrap;
+}
+
 .summary-card {
     flex: 1;
-    min-width: 200px;
-    padding: 20px;
+    min-width: 170px;
+    padding: 16px;
     border-radius: 8px;
     background: var(--card-bg);
     border: 1px solid var(--border-color);
@@ -13,10 +28,10 @@
 }
 
 .summary-card .card-value {
-    font-size: 28px;
+    font-size: 22px;
     font-weight: 700;
     color: var(--text-color);
-    margin-bottom: 5px;
+    margin-bottom: 4px;
 }
 
 .summary-card .card-label {
@@ -26,11 +41,17 @@
     letter-spacing: 0.5px;
 }
 
-.summary-card.filled {
+.summary-card .card-note {
+    font-size: 12px;
+    color: var(--text-muted);
+    margin-top: 4px;
+}
+
+.summary-card.purchase {
     border-left: 4px solid var(--blue-500);
 }
 
-.summary-card.empty {
+.summary-card.to-pay {
     border-left: 4px solid var(--orange-500);
 }
 
@@ -38,18 +59,35 @@
     border-left: 4px solid var(--green-500);
 }
 
-.summary-card.revenue {
+.summary-card.to-collect {
+    border-left: 4px solid var(--yellow-500);
+}
+
+.summary-card.collected {
     border-left: 4px solid var(--purple-500);
 }
 
-.stock-table table,
+.summary-card.stock {
+    border-left: 4px solid var(--cyan-500);
+}
+
+.summary-card.low {
+    border-left: 4px solid var(--red-500);
+}
+
+.location-table,
+.exchange-logs-table {
+    overflow-x: auto;
+}
+
+.location-table table,
 .exchange-logs-table table {
     width: 100%;
     border-collapse: collapse;
 }
 
-.stock-table th,
-.stock-table td,
+.location-table th,
+.location-table td,
 .exchange-logs-table th,
 .exchange-logs-table td {
     padding: 8px 12px;
@@ -57,16 +95,30 @@
     text-align: left;
 }
 
-.stock-table th,
+.location-table th,
 .exchange-logs-table th {
-    background: var(--subtle-bg);
+    background: var(--subtle-fg);
     font-weight: 600;
     font-size: 12px;
     text-transform: uppercase;
     color: var(--text-muted);
 }
 
-.stock-table td,
+.location-table td,
 .exchange-logs-table td {
     font-size: 13px;
+}
+
+.location-table .num {
+    text-align: right;
+    white-space: nowrap;
+}
+
+.location-table .sub {
+    font-size: 11px;
+    color: var(--text-muted);
+}
+
+.location-table tr.low-stock td {
+    background: var(--red-50);
 }

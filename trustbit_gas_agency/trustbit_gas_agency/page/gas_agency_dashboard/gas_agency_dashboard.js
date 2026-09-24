@@ -65,63 +65,89 @@ function refresh_dashboard(page) {
         "trustbit_gas_agency.utils.stock_utils.get_dashboard_data",
         filters
     ).then(function (data) {
-        render_summary_cards(page, data);
-        render_stock_table(page, data.stock_summary);
-        render_sales_chart(page, data);
+        render_summary_cards(page, data.locations || []);
+        render_location_table(page, data.locations || []);
+        render_sales_trend(page, data.daily_sales || []);
         render_exchange_logs(page, data.exchange_logs);
     });
 }
 
-function render_summary_cards(page, data) {
+function sum(rows, field) {
+    return rows.reduce(function (total, row) {
+        return total + (row[field] || 0);
+    }, 0);
+}
+
+function fmt_qty(value) {
+    value = value || 0;
+    return format_number(value, null, value % 1 === 0 ? 0 : 2);
+}
+
+function render_summary_cards(page, locations) {
     var $container = page.main.find(".summary-cards");
     $container.empty();
 
-    var total_filled = 0;
-    var total_empty = 0;
-    var total_sales = 0;
-    var total_revenue = 0;
-
-    (data.stock_summary || []).forEach(function (s) {
-        total_filled += s.filled_qty;
-        total_empty += s.empty_qty;
-    });
-
-    (data.sales_summary || []).forEach(function (s) {
-        total_sales += s.sales_count;
-    });
-
-    (data.revenue_summary || []).forEach(function (s) {
-        total_revenue += s.total_revenue;
-    });
+    var low_stock_count = locations.filter(function (row) {
+        return row.low_stock;
+    }).length;
 
     var cards = [
         {
-            label: __("Filled Cylinders"),
-            value: total_filled,
-            cls: "filled",
+            label: __("Purchase"),
+            value: format_currency(sum(locations, "purchase_amount")),
+            note: __("{0} filled cylinders", [fmt_qty(sum(locations, "purchase_qty"))]),
+            cls: "purchase",
         },
         {
-            label: __("Empty Cylinders"),
-            value: total_empty,
-            cls: "empty",
+            label: __("To Pay"),
+            value: format_currency(sum(locations, "pending_purchase")),
+            note: __("unpaid supplier bills"),
+            cls: "to-pay",
         },
         {
-            label: __("Total Sales"),
-            value: total_sales,
+            label: __("Sales"),
+            value: format_currency(sum(locations, "sales_amount")),
+            note: __("{0} cylinders · {1} KG", [
+                fmt_qty(sum(locations, "sales_qty")),
+                fmt_qty(sum(locations, "sales_kg")),
+            ]),
             cls: "sales",
         },
         {
-            label: __("Total Revenue"),
-            value: format_currency(total_revenue),
-            cls: "revenue",
+            label: __("To Collect"),
+            value: format_currency(sum(locations, "pending_sales")),
+            note: __("unpaid customer invoices"),
+            cls: "to-collect",
+        },
+        {
+            label: __("Collected"),
+            value: format_currency(sum(locations, "collected")),
+            note: __("payments received"),
+            cls: "collected",
+        },
+        {
+            label: __("Cylinders in Hand"),
+            value: fmt_qty(sum(locations, "filled_qty")),
+            note: __("filled · {0} empty", [fmt_qty(sum(locations, "empty_qty"))]),
+            cls: "stock",
         },
     ];
+
+    if (low_stock_count) {
+        cards.push({
+            label: __("Low Stock"),
+            value: low_stock_count,
+            note: __("location(s) below minimum"),
+            cls: "low",
+        });
+    }
 
     cards.forEach(function (card) {
         $container.append(
             '<div class="summary-card ' + card.cls + '">' +
                 '<div class="card-value">' + card.value + "</div>" +
                 '<div class="card-label">' + card.label + "</div>" +
+                '<div class="card-note">' + card.note + "</div>" +
             "</div>"
         );
     });
@@ -142,31 +168,59 @@ function escape_html(value) {
     });
 }
 
-function render_stock_table(page, stock_summary) {
-    var $container = page.main.find(".stock-table");
+function num_cell(main, sub) {
+    return '<td class="num">' + main + (sub ? '<div class="sub">' + sub + "</div>" : "") + "</td>";
+}
+
+function render_location_table(page, locations) {
+    var $container = page.main.find(".location-table");
     $container.empty();
 
-    if (!stock_summary || !stock_summary.length) {
-        $container.html('<p class="text-muted">' + __("No stock data available") + "</p>");
+    if (!locations.length) {
+        $container.html('<p class="text-muted">' + __("No active locations") + "</p>");
         return;
     }
 
     var html = "<table>" +
         "<thead><tr>" +
         "<th>" + __("Location") + "</th>" +
-        "<th>" + __("Filled Qty") + "</th>" +
-        "<th>" + __("Empty Qty") + "</th>" +
-        "<th>" + __("Filled KG") + "</th>" +
-        "<th>" + __("Empty KG") + "</th>" +
+        '<th class="num">' + __("Purchase") + "</th>" +
+        '<th class="num">' + __("To Pay") + "</th>" +
+        '<th class="num">' + __("Sales") + "</th>" +
+        '<th class="num">' + __("To Collect") + "</th>" +
+        '<th class="num">' + __("Collected") + "</th>" +
+        '<th class="num">' + __("Filled in Hand") + "</th>" +
+        '<th class="num">' + __("Empty in Hand") + "</th>" +
+        '<th class="num">' + __("Empties In") + "</th>" +
+        '<th class="num">' + __("Empties Out") + "</th>" +
         "</tr></thead><tbody>";
 
-    stock_summary.forEach(function (row) {
-        html += "<tr>" +
-            "<td>" + escape_html(row.location) + "</td>" +
-            "<td>" + escape_html(row.filled_qty) + "</td>" +
-            "<td>" + escape_html(row.empty_qty) + "</td>" +
-            "<td>" + escape_html(row.filled_kg.toFixed(2)) + "</td>" +
-            "<td>" + escape_html(row.empty_kg.toFixed(2)) + "</td>" +
+    locations.forEach(function (row) {
+        var location =
+            '<a href="/app/gas-agency-location/' + encodeURIComponent(row.location) + '">' +
+            escape_html(row.location) +
+            "</a>";
+        if (row.low_stock) {
+            location +=
+                ' <span class="indicator-pill red">' +
+                __("Low stock (min {0})", [row.min_filled_qty]) +
+                "</span>";
+        }
+
+        html += '<tr class="' + (row.low_stock ? "low-stock" : "") + '">' +
+            "<td>" + location + "</td>" +
+            num_cell(format_currency(row.purchase_amount), __("{0} cyl", [fmt_qty(row.purchase_qty)])) +
+            num_cell(format_currency(row.pending_purchase)) +
+            num_cell(
+                format_currency(row.sales_amount),
+                __("{0} cyl · {1} KG", [fmt_qty(row.sales_qty), fmt_qty(row.sales_kg)])
+            ) +
+            num_cell(format_currency(row.pending_sales)) +
+            num_cell(format_currency(row.collected)) +
+            num_cell(fmt_qty(row.filled_qty), __("{0} KG", [fmt_qty(row.filled_kg)])) +
+            num_cell(fmt_qty(row.empty_qty), __("{0} KG", [fmt_qty(row.empty_kg)])) +
+            num_cell(fmt_qty(row.empties_in)) +
+            num_cell(fmt_qty(row.empties_out)) +
             "</tr>";
     });
 
@@ -174,42 +228,37 @@ function render_stock_table(page, stock_summary) {
     $container.html(html);
 }
 
-function render_sales_chart(page, data) {
-    var $container = page.main.find(".sales-chart");
+function render_sales_trend(page, days) {
+    var $container = page.main.find(".sales-trend");
     $container.empty();
 
-    var sales_summary = data.sales_summary || [];
-    var revenue_summary = data.revenue_summary || [];
-
-    if (!sales_summary.length) {
-        $container.html('<p class="text-muted">' + __("No sales data available") + "</p>");
+    var has_sales = days.some(function (day) {
+        return day.amount;
+    });
+    if (!has_sales) {
+        $container.html('<p class="text-muted">' + __("No sales in the selected dates") + "</p>");
         return;
     }
 
-    var labels = sales_summary.map(function (s) {
-        return s.location;
-    });
-    var sales_values = sales_summary.map(function (s) {
-        return s.sales_count;
-    });
-    var revenue_values = revenue_summary.map(function (s) {
-        return s.total_revenue;
-    });
-
     new frappe.Chart($container[0], {
-        type: "bar",
-        height: 300,
+        type: "line",
+        height: 250,
         data: {
-            labels: labels,
+            labels: days.map(function (day) {
+                return frappe.datetime.str_to_user(day.date);
+            }),
             datasets: [
-                { name: __("Sales Count"), values: sales_values },
-                { name: __("Revenue"), values: revenue_values },
+                {
+                    name: __("Sales"),
+                    values: days.map(function (day) {
+                        return day.amount;
+                    }),
+                },
             ],
         },
-        colors: ["#4CAF50", "#9C27B0"],
-        barOptions: {
-            spaceRatio: 0.4,
-        },
+        colors: ["#4CAF50"],
+        axisOptions: { xIsSeries: 1 },
+        lineOptions: { regionFill: 1 },
     });
 }
 

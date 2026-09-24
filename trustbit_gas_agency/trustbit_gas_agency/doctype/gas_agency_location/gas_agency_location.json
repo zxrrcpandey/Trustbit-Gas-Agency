@@ -15,6 +15,7 @@
     "address",
     "warehouse_section",
     "warehouse",
+    "min_filled_qty",
     "column_break_2",
     "default_target_warehouse",
     "accounts_section",
@@ -85,6 +86,13 @@
       "description": "Primary warehouse for filled cylinder stock"
     },
     {
+      "description": "The dashboard flags this location when filled cylinders in stock fall below this. 0 = no alert.",
+      "fieldname": "min_filled_qty",
+      "fieldtype": "Int",
+      "label": "Minimum Filled Cylinders",
+      "non_negative": 1
+    },
+    {
       "fieldname": "column_break_2",
       "fieldtype": "Column Break"
     },
@@ -119,7 +127,7 @@
     }
   ],
   "links": [],
-  "modified": "2026-09-24 00:00:00.000000",
+  "modified": "2026-09-24 18:00:00.000000",
   "modified_by": "Administrator",
   "module": "Trustbit Gas Agency",
   "name": "Gas Agency Location",

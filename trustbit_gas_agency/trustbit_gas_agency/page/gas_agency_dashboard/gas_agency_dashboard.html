@@ -3,23 +3,27 @@
     <div class="dashboard-filters" style="margin-bottom: 20px;"></div>
 
     <!-- Summary Cards -->
-    <div class="summary-cards" style="display: flex; gap: 15px; margin-bottom: 25px; flex-wrap: wrap;"></div>
+    <div class="summary-cards"></div>
 
-    <!-- Stock Table -->
-    <div class="stock-section" style="margin-bottom: 25px;">
-        <h4 style="margin-bottom: 10px;">Location-wise Cylinder Stock</h4>
-        <div class="stock-table"></div>
+    <!-- Location-wise Summary -->
+    <div class="dashboard-section">
+        <h4>Location-wise Summary</h4>
+        <p class="text-muted small">
+            Purchase, Sales, Collected and Empties In/Out are for the selected dates; To Pay,
+            To Collect and cylinders in hand are as of now. Purchase and Sales amounts exclude GST.
+        </p>
+        <div class="location-table"></div>
     </div>
 
-    <!-- Sales Chart -->
-    <div class="sales-chart-section" style="margin-bottom: 25px;">
-        <h4 style="margin-bottom: 10px;">Location-wise Sales</h4>
-        <div class="sales-chart"></div>
+    <!-- Daily Sales -->
+    <div class="dashboard-section">
+        <h4>Daily Sales (excl. GST)</h4>
+        <div class="sales-trend"></div>
     </div>
 
     <!-- Recent Exchange Logs -->
-    <div class="exchange-logs-section">
-        <h4 style="margin-bottom: 10px;">Recent Cylinder Exchanges</h4>
+    <div class="dashboard-section">
+        <h4>Recent Cylinder Exchanges</h4>
         <div class="exchange-logs-table"></div>
     </div>
 </div>
