@@ -9,7 +9,18 @@ frappe.pages["gas-agency-dashboard"].on_page_load = function (wrapper) {
     // which the fields below are added to
     page.main.append(frappe.render_template("gas_agency_dashboard"));
 
-    // Add filters
+    // Add filters: Company, then its locations, then the dates
+    page.company_filter = page.add_field({
+        fieldname: "company",
+        label: __("Company"),
+        fieldtype: "Link",
+        options: "Company",
+        default: frappe.defaults.get_default("company"),
+        change: function () {
+            refresh_dashboard(page);
+        },
+    });
+
     // Filled with the company's active locations on each refresh
     page.location_filter = page.add_field({
         fieldname: "location",
@@ -36,17 +47,6 @@ frappe.pages["gas-agency-dashboard"].on_page_load = function (wrapper) {
         label: __("To Date"),
         fieldtype: "Date",
         default: frappe.datetime.nowdate(),
-        change: function () {
-            refresh_dashboard(page);
-        },
-    });
-
-    page.company_filter = page.add_field({
-        fieldname: "company",
-        label: __("Company"),
-        fieldtype: "Link",
-        options: "Company",
-        default: frappe.defaults.get_default("company"),
         change: function () {
             refresh_dashboard(page);
         },
