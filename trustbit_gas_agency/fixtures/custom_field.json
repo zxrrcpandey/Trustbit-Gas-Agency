@@ -166,5 +166,50 @@
     "description": "Copied from the Sales Invoice on save if left blank",
     "module": "Trustbit Gas Agency",
     "owner": "Administrator"
+  },
+  {
+    "doctype": "Custom Field",
+    "name": "Purchase Invoice-gas_vehicle",
+    "dt": "Purchase Invoice",
+    "fieldname": "gas_vehicle",
+    "fieldtype": "Link",
+    "label": "Vehicle",
+    "options": "Gas Vehicle",
+    "insert_after": "due_date",
+    "reqd": 1,
+    "allow_on_submit": 1,
+    "in_standard_filter": 1,
+    "module": "Trustbit Gas Agency",
+    "owner": "Administrator"
+  },
+  {
+    "doctype": "Custom Field",
+    "name": "Purchase Invoice-gas_driver_name",
+    "dt": "Purchase Invoice",
+    "fieldname": "gas_driver_name",
+    "fieldtype": "Data",
+    "label": "Driver Name",
+    "insert_after": "gas_vehicle",
+    "fetch_from": "gas_vehicle.driver_name",
+    "fetch_if_empty": 1,
+    "allow_on_submit": 1,
+    "description": "Filled from the vehicle; change it if another driver went",
+    "module": "Trustbit Gas Agency",
+    "owner": "Administrator"
+  },
+  {
+    "doctype": "Custom Field",
+    "name": "Purchase Invoice-gas_driver_mobile",
+    "dt": "Purchase Invoice",
+    "fieldname": "gas_driver_mobile",
+    "fieldtype": "Data",
+    "label": "Driver Mobile",
+    "options": "Phone",
+    "insert_after": "gas_driver_name",
+    "fetch_from": "gas_vehicle.driver_mobile",
+    "fetch_if_empty": 1,
+    "allow_on_submit": 1,
+    "module": "Trustbit Gas Agency",
+    "owner": "Administrator"
   }
 ]
