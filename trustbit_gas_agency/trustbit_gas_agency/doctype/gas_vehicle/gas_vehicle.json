@@ -1,0 +1,124 @@
+{
+  "actions": [],
+  "allow_rename": 1,
+  "autoname": "field:vehicle_number",
+  "creation": "2026-09-26 00:00:00.000000",
+  "doctype": "DocType",
+  "engine": "InnoDB",
+  "field_order": [
+    "vehicle_number",
+    "vehicle_type",
+    "column_break_1",
+    "driver_name",
+    "driver_mobile",
+    "disabled"
+  ],
+  "fields": [
+    {
+      "description": "Saved in capitals without spaces, e.g. MP09AB1234",
+      "fieldname": "vehicle_number",
+      "fieldtype": "Data",
+      "label": "Vehicle Number",
+      "reqd": 1,
+      "unique": 1,
+      "set_only_once": 1,
+      "in_list_view": 1
+    },
+    {
+      "allow_in_quick_entry": 1,
+      "fieldname": "vehicle_type",
+      "fieldtype": "Select",
+      "label": "Vehicle Type",
+      "options": "\nTruck\nTempo\nPickup\nThree Wheeler\nOther",
+      "in_list_view": 1
+    },
+    {
+      "fieldname": "column_break_1",
+      "fieldtype": "Column Break"
+    },
+    {
+      "allow_in_quick_entry": 1,
+      "fieldname": "driver_name",
+      "fieldtype": "Data",
+      "label": "Driver Name",
+      "in_list_view": 1
+    },
+    {
+      "allow_in_quick_entry": 1,
+      "fieldname": "driver_mobile",
+      "fieldtype": "Data",
+      "label": "Driver Mobile",
+      "options": "Phone"
+    },
+    {
+      "default": "0",
+      "description": "Disabled vehicles are hidden when picking a vehicle on an invoice or payment",
+      "fieldname": "disabled",
+      "fieldtype": "Check",
+      "label": "Disabled"
+    }
+  ],
+  "links": [],
+  "modified": "2026-09-26 00:00:00.000000",
+  "modified_by": "Administrator",
+  "module": "Trustbit Gas Agency",
+  "name": "Gas Vehicle",
+  "naming_rule": "By fieldname",
+  "owner": "Administrator",
+  "permissions": [
+    {
+      "create": 1,
+      "delete": 1,
+      "email": 1,
+      "export": 1,
+      "print": 1,
+      "read": 1,
+      "report": 1,
+      "role": "System Manager",
+      "share": 1,
+      "write": 1
+    },
+    {
+      "create": 1,
+      "delete": 1,
+      "export": 1,
+      "print": 1,
+      "read": 1,
+      "report": 1,
+      "role": "Sales Manager",
+      "share": 1,
+      "write": 1
+    },
+    {
+      "create": 1,
+      "delete": 1,
+      "export": 1,
+      "print": 1,
+      "read": 1,
+      "report": 1,
+      "role": "Accounts Manager",
+      "share": 1,
+      "write": 1
+    },
+    {
+      "create": 1,
+      "read": 1,
+      "report": 1,
+      "role": "Sales User",
+      "write": 1
+    },
+    {
+      "create": 1,
+      "read": 1,
+      "report": 1,
+      "role": "Accounts User",
+      "write": 1
+    }
+  ],
+  "quick_entry": 1,
+  "search_fields": "driver_name",
+  "sort_field": "modified",
+  "sort_order": "DESC",
+  "title_field": "vehicle_number",
+  "track_changes": 1
+}

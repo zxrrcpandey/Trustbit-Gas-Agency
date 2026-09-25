@@ -29,6 +29,9 @@ doc_events = {
         "on_submit": "trustbit_gas_agency.overrides.delivery_note.on_submit",
         "on_cancel": "trustbit_gas_agency.overrides.delivery_note.on_cancel",
     },
+    "Payment Entry": {
+        "validate": "trustbit_gas_agency.overrides.payment_entry.validate",
+    },
 }
 
 # Fixtures
