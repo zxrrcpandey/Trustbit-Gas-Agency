@@ -1,6 +1,7 @@
 import frappe
 from frappe.utils import add_days, nowdate
 
+from trustbit_gas_agency.trustbit_gas_agency.report.credit_sales.credit_sales import credit_type
 from trustbit_gas_agency.utils.stock_utils import _get_cylinder_items, _get_locations, _get_stock
 
 LIMIT = 10
@@ -86,7 +87,7 @@ def get_list_dashboard_data(company=None, location=None, from_date=None, to_date
         "sales": _recent_documents(f, SALES_DOCTYPES),
         "supplier_payments": _recent_payments(f, "Pay"),
         "customer_payments": _recent_payments(f, "Receive"),
-        "pending_invoices": _pending_invoices(f),
+        "credit_sales": _credit_sales(f),
         "cylinder_movements": _cylinder_movements(f, cylinders),
         "low_stock": _low_stock(locations, cylinders),
         "exchange_errors": _exchange_errors(f, locations),
@@ -143,17 +144,17 @@ def _recent_payments(f, payment_type):
     )
 
 
-def _pending_invoices(f):
-    """Customer invoices not yet fully paid, as of now, newest first."""
-    conditions = ["docstatus = 1", "outstanding_amount > 0"]
+def _credit_sales(f):
+    """Customer invoices still owing money or empties, as of now, newest first, with their credit type."""
+    conditions = ["docstatus = 1", "is_return = 0", "(outstanding_amount > 0 OR pending_empties > 0)"]
     if f.company:
         conditions.append("company = %(company)s")
     if f.location:
         conditions.append("gas_agency_location = %(location)s")
-    return frappe.db.sql(
+    rows = frappe.db.sql(
         f"""
         SELECT name, posting_date AS date, due_date, customer AS party,
-            base_grand_total AS amount, outstanding_amount, status
+            outstanding_amount, pending_empties
         FROM `tabSales Invoice`
         WHERE {" AND ".join(conditions)}
         ORDER BY posting_date DESC, creation DESC
@@ -162,6 +163,9 @@ def _pending_invoices(f):
         f,
         as_dict=True,
     )
+    for row in rows:
+        row.credit_type = credit_type(row.outstanding_amount, row.pending_empties)
+    return rows
 
 
 def _cylinder_movements(f, cylinders):

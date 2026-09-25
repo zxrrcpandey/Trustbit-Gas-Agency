@@ -81,6 +81,7 @@ def _get_location_summary(loc, cylinders, from_date, to_date):
     summary.update(_get_empties_movement(loc.name, warehouses, cylinders, from_date, to_date))
     summary.pending_purchase = _get_pending_purchase(warehouses)
     summary.pending_sales = _get_pending_sales(loc.name)
+    summary.update(_get_credit_sales(loc.name))
     summary.collected = _get_collected(loc.name, from_date, to_date)
     summary.low_stock = bool(summary.min_filled_qty) and summary.filled_qty < summary.min_filled_qty
     return summary
@@ -216,6 +217,34 @@ def _get_pending_sales(location):
             location,
         )[0][0]
     )
+
+
+def _get_credit_sales(location):
+    """
+    The location's sales still owing something, as of now, by credit type:
+    how many invoices are Amount Pending, Cylinder Pending and Both Pending,
+    and the money and empties they owe.
+    """
+    row = frappe.db.sql(
+        """
+        SELECT
+            SUM(outstanding_amount > 0 AND pending_empties <= 0) AS amount_pending,
+            SUM(IF(outstanding_amount > 0 AND pending_empties <= 0, outstanding_amount, 0))
+                AS amount_pending_amount,
+            SUM(outstanding_amount <= 0 AND pending_empties > 0) AS cylinder_pending,
+            SUM(IF(outstanding_amount <= 0, pending_empties, 0)) AS cylinder_pending_empties,
+            SUM(outstanding_amount > 0 AND pending_empties > 0) AS both_pending,
+            SUM(IF(outstanding_amount > 0 AND pending_empties > 0, outstanding_amount, 0))
+                AS both_pending_amount,
+            SUM(IF(outstanding_amount > 0, pending_empties, 0)) AS both_pending_empties,
+            SUM(pending_empties) AS pending_empties
+        FROM `tabSales Invoice`
+        WHERE docstatus = 1 AND is_return = 0 AND gas_agency_location = %s
+        """,
+        location,
+        as_dict=True,
+    )[0]
+    return {key: flt(value) for key, value in row.items()}
 
 
 def _get_collected(location, from_date, to_date):

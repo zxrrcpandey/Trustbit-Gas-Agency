@@ -24,6 +24,10 @@
         Overdue: "red",
         Return: "gray",
         "Credit Note Issued": "gray",
+        // Credit types, in the Sales Invoice list's colours
+        "Amount Pending": "orange",
+        "Cylinder Pending": "purple",
+        "Both Pending": "red",
     };
 
     var SECTIONS = [
@@ -92,23 +96,23 @@
             },
         },
         {
-            key: "pending_invoices",
-            title: __("Pending Customer Payments"),
-            note: __("Invoices not yet fully paid, as of now"),
+            key: "credit_sales",
+            title: __("Credit Sales"),
+            note: __("Invoices still owing money or empties, as of now"),
             columns: [
                 col(__("Date"), function (r) { return fmt_date(r.date); }),
                 col(__("Invoice"), function (r) { return doc_link("Sales Invoice", r.name); }),
                 col(__("Customer"), function (r) { return escape_html(r.party); }),
                 col(__("Due"), function (r) { return fmt_date(r.due_date); }),
-                col(__("Amount"), function (r) { return format_currency(r.amount); }, true),
-                col(__("Outstanding"), function (r) { return format_currency(r.outstanding_amount); }, true),
-                col(__("Status"), function (r) { return status_pill(r.status); }),
+                col(__("Amount Pending"), function (r) { return format_currency(r.outstanding_amount); }, true),
+                col(__("Empties Pending"), function (r) { return fmt_qty(r.pending_empties); }, true),
+                col(__("Credit Type"), function (r) { return status_pill(r.credit_type); }),
             ],
             more: function (f) {
-                var filters = { docstatus: 1, outstanding_amount: [">", 0] };
+                var filters = {};
                 if (f.company) filters.company = f.company;
-                if (f.location) filters.gas_agency_location = f.location;
-                return [more(__("All Unpaid Invoices"), "Sales Invoice", filters)];
+                if (f.location) filters.location = f.location;
+                return [more(__("Credit Sales Report"), "Credit Sales", filters, true)];
             },
         },
         {
@@ -224,7 +228,11 @@
 
         page.main.on("click", ".more-link", function () {
             frappe.route_options = JSON.parse($(this).attr("data-filters"));
-            frappe.set_route("List", $(this).attr("data-doctype"));
+            if ($(this).attr("data-report")) {
+                frappe.set_route("query-report", $(this).attr("data-report"));
+            } else {
+                frappe.set_route("List", $(this).attr("data-doctype"));
+            }
         });
 
         refresh(page);
@@ -297,12 +305,14 @@
         return { label: label, value: value, num: num };
     }
 
-    function more(label, doctype, filters) {
-        return { label: label, doctype: doctype, filters: filters };
+    function more(label, doctype, filters, is_report) {
+        // is_report: doctype names a query report to open instead of a list
+        return { label: label, doctype: doctype, filters: filters, is_report: is_report };
     }
 
     function more_link(m) {
-        return '<a class="more-link" data-doctype="' + escape_html(m.doctype) + '" data-filters="' +
+        var target = m.is_report ? "data-report" : "data-doctype";
+        return '<a class="more-link" ' + target + '="' + escape_html(m.doctype) + '" data-filters="' +
             escape_html(JSON.stringify(m.filters)) + '">' + m.label + " →</a>";
     }
 

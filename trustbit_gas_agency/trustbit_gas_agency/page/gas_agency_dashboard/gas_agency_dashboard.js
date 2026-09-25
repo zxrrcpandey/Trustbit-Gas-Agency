@@ -150,6 +150,27 @@ function render_summary_cards(page, locations) {
             cls: "to-collect",
         },
         {
+            label: __("Amount Pending"),
+            value: fmt_qty(sum(locations, "amount_pending")),
+            note: __("invoices · {0}", [format_currency(sum(locations, "amount_pending_amount"))]),
+            cls: "amount-pending",
+        },
+        {
+            label: __("Cylinder Pending"),
+            value: fmt_qty(sum(locations, "cylinder_pending")),
+            note: __("invoices · {0} empties", [fmt_qty(sum(locations, "cylinder_pending_empties"))]),
+            cls: "cylinder-pending",
+        },
+        {
+            label: __("Both Pending"),
+            value: fmt_qty(sum(locations, "both_pending")),
+            note: __("invoices · {0} · {1} empties", [
+                format_currency(sum(locations, "both_pending_amount")),
+                fmt_qty(sum(locations, "both_pending_empties")),
+            ]),
+            cls: "both-pending",
+        },
+        {
             label: __("Collected"),
             value: format_currency(sum(locations, "collected")),
             note: __("payments received"),
@@ -218,6 +239,7 @@ function render_location_table(page, locations) {
         '<th class="num">' + __("To Pay") + "</th>" +
         '<th class="num">' + __("Sales") + "</th>" +
         '<th class="num">' + __("To Collect") + "</th>" +
+        '<th class="num">' + __("Empties Pending") + "</th>" +
         '<th class="num">' + __("Collected") + "</th>" +
         '<th class="num">' + __("Filled in Hand") + "</th>" +
         '<th class="num">' + __("Empty in Hand") + "</th>" +
@@ -246,6 +268,10 @@ function render_location_table(page, locations) {
                 __("{0} cyl · {1} KG", [fmt_qty(row.sales_qty), fmt_qty(row.sales_kg)])
             ) +
             num_cell(format_currency(row.pending_sales)) +
+            num_cell(
+                fmt_qty(row.pending_empties),
+                __("{0} inv", [fmt_qty(row.cylinder_pending + row.both_pending)])
+            ) +
             num_cell(format_currency(row.collected)) +
             num_cell(fmt_qty(row.filled_qty), __("{0} KG", [fmt_qty(row.filled_kg)])) +
             num_cell(fmt_qty(row.empty_qty), __("{0} KG", [fmt_qty(row.empty_kg)])) +

@@ -63,6 +63,19 @@
     border-left: 4px solid var(--yellow-500);
 }
 
+/* Credit types, in the Sales Invoice list's colours */
+.summary-card.amount-pending {
+    border-left: 4px solid var(--orange-500);
+}
+
+.summary-card.cylinder-pending {
+    border-left: 4px solid var(--purple-500);
+}
+
+.summary-card.both-pending {
+    border-left: 4px solid var(--red-500);
+}
+
 .summary-card.collected {
     border-left: 4px solid var(--purple-500);
 }
