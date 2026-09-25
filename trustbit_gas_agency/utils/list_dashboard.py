@@ -1,5 +1,5 @@
 import frappe
-from frappe.utils import add_days, nowdate
+from frappe.utils import add_days, flt, nowdate
 
 from trustbit_gas_agency.trustbit_gas_agency.report.credit_sales.credit_sales import credit_type
 from trustbit_gas_agency.utils.stock_utils import _get_cylinder_items, _get_locations, _get_stock
@@ -84,7 +84,7 @@ def get_list_dashboard_data(company=None, location=None, from_date=None, to_date
         "branch_warehouses": list(f.warehouses or []),
         "cylinder_items": list(cylinders.filled) + list(cylinders.empty),
         "purchases": _recent_documents(f, PURCHASE_DOCTYPES),
-        "sales": _recent_documents(f, SALES_DOCTYPES),
+        "sales": _show_credit_types(_recent_documents(f, SALES_DOCTYPES)),
         "supplier_payments": _recent_payments(f, "Pay"),
         "customer_payments": _recent_payments(f, "Receive"),
         "credit_sales": _credit_sales(f),
@@ -117,6 +117,31 @@ def _recent_documents(f, doctypes):
         )
     rows.sort(key=lambda r: (r.date, r.creation), reverse=True)
     return rows[:LIMIT]
+
+
+def _show_credit_types(rows):
+    """
+    Sales Invoices still owing money or empties show their credit type as
+    their status, as in the Sales Invoice list.
+    """
+    names = [row.name for row in rows if row.doctype == "Sales Invoice"]
+    if not names:
+        return rows
+
+    owing = {
+        d.name: d
+        for d in frappe.get_all(
+            "Sales Invoice",
+            filters={"name": ["in", names], "docstatus": 1, "is_return": 0},
+            fields=["name", "outstanding_amount", "pending_empties"],
+        )
+        if flt(d.outstanding_amount) > 0 or flt(d.pending_empties) > 0
+    }
+    for row in rows:
+        if row.doctype == "Sales Invoice" and row.name in owing:
+            d = owing[row.name]
+            row.status = credit_type(d.outstanding_amount, d.pending_empties)
+    return rows
 
 
 def _recent_payments(f, payment_type):
