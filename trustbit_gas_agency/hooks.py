@@ -18,6 +18,9 @@ doctype_js = {
     "Sales Invoice": "public/js/sales_invoice.js",
     "Delivery Note": "public/js/delivery_note.js",
 }
+doctype_list_js = {
+    "Sales Invoice": "public/js/sales_invoice_list.js",
+}
 
 # Document Events
 doc_events = {
