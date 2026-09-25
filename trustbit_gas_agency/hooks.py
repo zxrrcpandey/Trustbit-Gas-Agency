@@ -22,8 +22,12 @@ doctype_js = {
 # Document Events
 doc_events = {
     "Sales Invoice": {
+        "validate": "trustbit_gas_agency.overrides.sales_invoice.validate",
         "on_submit": "trustbit_gas_agency.overrides.sales_invoice.on_submit",
         "on_cancel": "trustbit_gas_agency.overrides.sales_invoice.on_cancel",
+    },
+    "Stock Entry": {
+        "on_cancel": "trustbit_gas_agency.overrides.stock_entry.on_cancel",
     },
     "Delivery Note": {
         "on_submit": "trustbit_gas_agency.overrides.delivery_note.on_submit",

@@ -7,8 +7,10 @@ def process_cylinder_exchange(doc, method):
     """
     Process cylinder exchange on Sales Invoice / Delivery Note submit.
     For each sold filled cylinder item, create a Stock Entry (Material Receipt)
-    to add the corresponding empty cylinder back to stock. On a return the
-    customer takes those empties back, so they are issued out (Material Issue).
+    to add the corresponding empty cylinder back to stock. Empties the customer
+    didn't hand over (Empties Not Received) are logged as pending instead. On
+    a return the customer takes those empties back, so they are issued out
+    (Material Issue).
     """
     settings = frappe.get_cached_doc("Gas Agency Settings")
 
@@ -32,15 +34,19 @@ def process_cylinder_exchange(doc, method):
     if not exchange_items:
         return
 
+    # A row whose empties are all pending, or a return that only clears
+    # pending empties, moves no stock but is still logged
+    stock_items = [item for item in exchange_items if flt(item["qty"], 3)]
     stock_entry = None
     message_count = len(frappe.local.message_log)
     try:
-        stock_entry = _in_savepoint(
-            "tga_insert_se", lambda: _create_stock_entry(doc, exchange_items, purpose)
-        )
-        if settings.auto_submit_stock_entry:
-            # A failed submit is undone back to the draft the Error log links to
-            _in_savepoint("tga_submit_se", stock_entry.submit)
+        if stock_items:
+            stock_entry = _in_savepoint(
+                "tga_insert_se", lambda: _create_stock_entry(doc, stock_items, purpose)
+            )
+            if settings.auto_submit_stock_entry:
+                # A failed submit is undone back to the draft the Error log links to
+                _in_savepoint("tga_submit_se", stock_entry.submit)
 
         # Create exchange logs
         for item in exchange_items:
@@ -51,21 +57,40 @@ def process_cylinder_exchange(doc, method):
                 status="Completed",
             )
 
-        total_qty = flt(sum(abs(item["qty"]) for item in exchange_items))
-        message = (
-            _("Cylinder Exchange: {0} empty cylinder(s) given back via {1}")
-            if purpose == "Material Issue"
-            else _("Cylinder Exchange: {0} empty cylinder(s) added to stock via {1}")
-        )
-        frappe.msgprint(
-            message.format(
-                "{0:g}".format(total_qty),
-                # Stock Entry's title is its type; show the entry number too
-                frappe.get_desk_link("Stock Entry", stock_entry.name, show_title_with_name=True),
-            ),
-            alert=True,
-            indicator="green",
-        )
+        if stock_entry:
+            total_qty = flt(sum(abs(item["qty"]) for item in stock_items))
+            message = (
+                _("Cylinder Exchange: {0} empty cylinder(s) given back via {1}")
+                if purpose == "Material Issue"
+                else _("Cylinder Exchange: {0} empty cylinder(s) added to stock via {1}")
+            )
+            frappe.msgprint(
+                message.format(
+                    "{0:g}".format(total_qty),
+                    # Stock Entry's title is its type; show the entry number too
+                    frappe.get_desk_link("Stock Entry", stock_entry.name, show_title_with_name=True),
+                ),
+                alert=True,
+                indicator="green",
+            )
+
+        pending_qty = flt(sum(item["pending_qty"] for item in exchange_items))
+        if pending_qty > 0:
+            frappe.msgprint(
+                _("Cylinder Exchange: {0} empty cylinder(s) pending from the customer").format(
+                    "{0:g}".format(pending_qty)
+                ),
+                alert=True,
+                indicator="orange",
+            )
+        elif pending_qty < 0:
+            frappe.msgprint(
+                _("Cylinder Exchange: {0} pending empty cylinder(s) cleared by this return").format(
+                    "{0:g}".format(-pending_qty)
+                ),
+                alert=True,
+                indicator="green",
+            )
 
     except frappe.QueryDeadlockError:
         # The database has rolled back the whole transaction, source document
@@ -94,6 +119,8 @@ def process_cylinder_exchange(doc, method):
             alert=True,
             indicator="red",
         )
+
+    _refresh_pending_empties(doc)
 
 
 def cancel_cylinder_exchange(doc, method):
@@ -195,6 +222,176 @@ def cancel_cylinder_exchange(doc, method):
             indicator="orange",
         )
 
+    _refresh_pending_empties(doc)
+
+
+def validate_empties_not_received(doc):
+    """
+    Mark each Sales Invoice row's cylinder rule, and keep Empties Not
+    Received between 0 and the empties its cylinders bring in.
+    """
+    for row in doc.items:
+        rule = _get_exchange_rule(row.item_code)
+        row.is_gas_cylinder = 1 if rule else 0
+        row.cylinder_exchange_rule = rule.name if rule else None
+
+        if not rule or doc.get("is_return"):
+            row.empties_not_received = 0
+            continue
+
+        expected = _cylinder_count(row) * flt(rule.exchange_ratio)
+        if flt(row.empties_not_received) > expected:
+            frappe.throw(
+                _("Row {0}: Empties Not Received ({1}) can't be more than the {2} empties due for {3}").format(
+                    row.idx, "{0:g}".format(flt(row.empties_not_received)), "{0:g}".format(expected), row.item_code
+                )
+            )
+
+
+def get_pending_empties(sales_invoice):
+    """
+    Empties a customer still owes on a sales invoice, by empty item. Each
+    exchange log of the invoice and its credit notes carries its change to
+    the count: + not handed over at billing, - brought back later or
+    cleared by returned cylinders.
+    """
+    if frappe.db.get_value("Sales Invoice", sales_invoice, "docstatus") != 1:
+        return {}
+
+    sources = [sales_invoice] + frappe.get_all(
+        "Sales Invoice",
+        filters={"return_against": sales_invoice, "is_return": 1, "docstatus": 1},
+        pluck="name",
+    )
+    pending = {}
+    for log in frappe.get_all(
+        "Cylinder Exchange Log",
+        filters={
+            "source_doctype": "Sales Invoice",
+            "source_name": ["in", sources],
+            # An Error log's Stock Entry failed, but its empties changed hands
+            # (or didn't) all the same
+            "status": ["in", ["Completed", "Error"]],
+        },
+        fields=["empty_item", "pending_qty"],
+    ):
+        pending[log.empty_item] = pending.get(log.empty_item, 0) + flt(log.pending_qty)
+
+    return {item: flt(qty, 3) for item, qty in pending.items() if flt(qty, 3) > 0}
+
+
+def update_pending_empties(sales_invoice):
+    """Store an invoice's pending empties total for its form, list and the Credit Sales report."""
+    total = sum(get_pending_empties(sales_invoice).values())
+    # Leave modified alone: the open form would otherwise count as outdated
+    frappe.db.set_value(
+        "Sales Invoice", sales_invoice, "pending_empties", total, update_modified=False
+    )
+    return total
+
+
+def _refresh_pending_empties(doc):
+    """Update pending empties on the invoice this document sold or returned."""
+    if doc.doctype != "Sales Invoice":
+        return
+
+    invoice = doc.return_against if doc.get("is_return") else doc.name
+    if not invoice:
+        return
+
+    total = update_pending_empties(invoice)
+    if invoice == doc.name:
+        # The form is sent this in-memory copy, not the row just written
+        doc.pending_empties = total
+
+
+@frappe.whitelist()
+def list_pending_empties(sales_invoice):
+    """Pending empties of an invoice, for the Receive Empties dialog."""
+    frappe.has_permission("Sales Invoice", "read", sales_invoice, throw=True)
+    return [
+        {
+            "empty_item": item,
+            "item_name": frappe.get_cached_value("Item", item, "item_name"),
+            "qty": qty,
+        }
+        for item, qty in get_pending_empties(sales_invoice).items()
+    ]
+
+
+@frappe.whitelist()
+def receive_empties(sales_invoice, empties):
+    """
+    Book empties a customer brings back after billing against the invoice
+    they are pending on: a Material Receipt, and logs that lower the count.
+    empties maps each empty item to the qty brought back.
+    """
+    doc = frappe.get_doc("Sales Invoice", sales_invoice)
+    doc.check_permission("submit")
+    if doc.docstatus != 1 or doc.is_return:
+        frappe.throw(_("Empties can only be received against a submitted Sales Invoice"))
+
+    settings = frappe.get_cached_doc("Gas Agency Settings")
+    pending = get_pending_empties(doc.name)
+    items = []
+    for empty_item, qty in frappe.parse_json(empties).items():
+        qty = flt(qty)
+        if qty <= 0:
+            continue
+        if qty > pending.get(empty_item, 0):
+            frappe.throw(
+                _("Only {0} of {1} pending on this invoice").format(
+                    "{0:g}".format(pending.get(empty_item, 0)), empty_item
+                )
+            )
+
+        # The row that left the empties pending, for its warehouse
+        filled_item = frappe.db.get_value(
+            "Cylinder Exchange Log",
+            {"source_doctype": "Sales Invoice", "source_name": doc.name, "empty_item": empty_item},
+            "filled_item",
+        )
+        row = next(row for row in doc.items if row.item_code == filled_item)
+        items.append({
+            "filled_item": filled_item,
+            "empty_item": empty_item,
+            "qty": qty,
+            "pending_qty": -qty,
+            "warehouse": _get_target_warehouse(doc, row, settings),
+            "location": doc.get("gas_agency_location"),
+        })
+
+    if not items:
+        frappe.throw(_("Enter the number of empties received"))
+
+    stock_entry = _create_stock_entry(doc, items, "Material Receipt", received_later=True)
+    if settings.auto_submit_stock_entry:
+        stock_entry.submit()
+
+    for item in items:
+        _create_exchange_log(doc=doc, item=item, stock_entry=stock_entry, status="Completed")
+
+    update_pending_empties(doc.name)
+    return stock_entry.name
+
+
+def cancel_empties_received(doc, method=None):
+    """
+    A Stock Entry of empties received after billing was cancelled, so those
+    empties are pending again. A sale's own exchange entry is left alone:
+    its logs also hold what was pending at billing.
+    """
+    logs = frappe.get_all(
+        "Cylinder Exchange Log",
+        # Only a later receipt adds stock (+qty) while lowering the count
+        filters={"stock_entry": doc.name, "status": "Completed", "qty": [">", 0], "pending_qty": ["<", 0]},
+        fields=["name", "source_name"],
+    )
+    for log in logs:
+        frappe.db.set_value("Cylinder Exchange Log", log.name, "status", "Cancelled")
+    for invoice in {log.source_name for log in logs}:
+        update_pending_empties(invoice)
+
 
 def _in_savepoint(save_point, action):
     """
@@ -269,10 +466,13 @@ def _collect_exchange_items(doc, settings):
 def _build_exchange_item(doc, row, rule, settings):
     """Build one exchange entry from a document row and its matched rule."""
     cylinders = _cylinder_count(row)
+    # Empties the customer didn't hand over: only Sales Invoice rows have them
+    pending_qty = flt(row.get("empties_not_received"))
     return {
         "filled_item": row.item_code,
         "empty_item": rule.empty_item,
-        "qty": cylinders * flt(rule.exchange_ratio),
+        "qty": cylinders * flt(rule.exchange_ratio) - pending_qty,
+        "pending_qty": pending_qty,
         "weight_kg": cylinders * flt(rule.filled_weight_kg) if settings.enable_kg_tracking else 0,
         "warehouse": _get_target_warehouse(doc, row, settings),
         "location": doc.get("gas_agency_location"),
@@ -295,17 +495,19 @@ def _collect_return_items(doc, settings):
     """
     Empties to give back for a credit note made from the invoice (Return /
     Credit Note) with Update Stock ticked: the filled cylinders came back, so
-    reverse the invoice's exchange for the returned rows. ERPNext won't let
-    returns add up to more than was sold, so this can't give back more than
-    came in. Other returns are left to a manual adjustment.
+    reverse the invoice's exchange for the returned rows. Returned cylinders
+    first clear empties still pending on the invoice; only the rest are
+    given back. ERPNext won't let returns add up to more than was sold, so
+    this can't give back more than came in. Other returns are left to a
+    manual adjustment.
     """
     # Without Update Stock a credit note only corrects the bill; the customer
     # kept the filled cylinders
     if doc.doctype == "Sales Invoice" and not doc.get("update_stock"):
         return []
 
-    # Only an invoice that actually received empties has any to give back
-    sale_received_empties = (
+    # Only an invoice whose sale ran the exchange has empties to settle
+    sale_exchanged = (
         doc.doctype == "Sales Invoice"
         and doc.get("return_against")
         and frappe.db.exists(
@@ -314,11 +516,10 @@ def _collect_return_items(doc, settings):
                 "source_doctype": "Sales Invoice",
                 "source_name": doc.return_against,
                 "status": "Completed",
-                "qty": [">", 0],
             },
         )
     )
-    if not sale_received_empties:
+    if not sale_exchanged:
         _alert_manual_give_back(doc)
         return []
 
@@ -326,13 +527,21 @@ def _collect_return_items(doc, settings):
     rows = [row for row in doc.items if row.item_code not in bundle_parents]
     rows += doc.get("packed_items") or []
 
+    pending = get_pending_empties(doc.return_against)
     items = []
     for row in rows:
         rule = _get_exchange_rule(row.item_code)
         # Return rows carry negative quantities, so the logs come out negative
         # and exchange totals net the return out
         if rule and flt(row.qty) < 0:
-            items.append(_build_exchange_item(doc, row, rule, settings))
+            item = _build_exchange_item(doc, row, rule, settings)
+            # Cylinders the customer never gave empties for cancel what they owe
+            available = pending.get(rule.empty_item, 0)
+            cleared = min(-item["qty"], available)
+            pending[rule.empty_item] = available - cleared
+            item["qty"] += cleared
+            item["pending_qty"] = -cleared
+            items.append(item)
     return items
 
 
@@ -436,26 +645,35 @@ def _get_target_warehouse(doc, row, settings):
     return row.warehouse
 
 
-def _create_stock_entry(doc, exchange_items, purpose):
+def _create_stock_entry(doc, exchange_items, purpose, received_later=False):
     """
-    Create the empty-cylinder Stock Entry: a Material Receipt for a sale, or a
-    Material Issue giving the empties back for a return.
+    Create the empty-cylinder Stock Entry: a Material Receipt for a sale or
+    for pending empties received later, or a Material Issue giving the
+    empties back for a return.
     """
     stock_entry = frappe.new_doc("Stock Entry")
     stock_entry.stock_entry_type = purpose
     stock_entry.company = doc.company
-    stock_entry.posting_date = doc.get("posting_date") or nowdate()
-    # The source document's own time, not the clock: a give-back posted
-    # earlier in the day than its sale's receipt would find no empties
-    # (a loaded document's midnight is timedelta(0), which is falsy)
-    posting_time = doc.get("posting_time")
-    stock_entry.posting_time = nowtime() if posting_time is None else posting_time
-    stock_entry.set_posting_time = 1
-    stock_entry.remarks = (
-        _("Empty cylinders given back for return {0} {1}")
-        if purpose == "Material Issue"
-        else _("Auto cylinder exchange from {0} {1}")
-    ).format(doc.doctype, doc.name)
+    if received_later:
+        # Pending empties come in today, not on the invoice's date
+        stock_entry.posting_date = nowdate()
+        stock_entry.posting_time = nowtime()
+    else:
+        stock_entry.posting_date = doc.get("posting_date") or nowdate()
+        # The source document's own time, not the clock: a give-back posted
+        # earlier in the day than its sale's receipt would find no empties
+        # (a loaded document's midnight is timedelta(0), which is falsy)
+        posting_time = doc.get("posting_time")
+        stock_entry.posting_time = nowtime() if posting_time is None else posting_time
+        stock_entry.set_posting_time = 1
+
+    if received_later:
+        remarks = _("Pending empty cylinders received for {0} {1}")
+    elif purpose == "Material Issue":
+        remarks = _("Empty cylinders given back for return {0} {1}")
+    else:
+        remarks = _("Auto cylinder exchange from {0} {1}")
+    stock_entry.remarks = remarks.format(doc.doctype, doc.name)
 
     cost_center = None
     location_name = doc.get("gas_agency_location")
@@ -489,9 +707,11 @@ def _create_exchange_log(doc, item, stock_entry, status, error_message=None):
     log.filled_item = item["filled_item"]
     log.empty_item = item["empty_item"]
     log.qty = item["qty"]
+    log.pending_qty = item.get("pending_qty", 0)
     log.weight_kg = item.get("weight_kg", 0)
     log.status = status
     log.error_message = error_message
-    log.exchange_date = doc.get("posting_date") or nowdate()
+    # Its Stock Entry's date: empties received later come in after the invoice
+    log.exchange_date = (stock_entry and stock_entry.posting_date) or doc.get("posting_date") or nowdate()
     log.insert(ignore_permissions=True)
     return log

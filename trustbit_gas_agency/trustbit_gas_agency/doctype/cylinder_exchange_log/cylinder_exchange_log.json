@@ -17,6 +17,7 @@
     "filled_item",
     "filled_item_name",
     "qty",
+    "pending_qty",
     "column_break_2",
     "empty_item",
     "empty_item_name",
@@ -111,6 +112,13 @@
       "in_list_view": 1
     },
     {
+      "fieldname": "pending_qty",
+      "fieldtype": "Float",
+      "label": "Pending Empties",
+      "description": "Change to the invoice's pending empties: + not handed over at billing, - brought back later or cleared by a return",
+      "read_only": 1
+    },
+    {
       "fieldname": "column_break_2",
       "fieldtype": "Column Break"
     },
@@ -160,7 +168,7 @@
     }
   ],
   "links": [],
-  "modified": "2026-09-24 00:00:00.000000",
+  "modified": "2026-09-26 00:00:00.000000",
   "modified_by": "Administrator",
   "module": "Trustbit Gas Agency",
   "name": "Cylinder Exchange Log",
