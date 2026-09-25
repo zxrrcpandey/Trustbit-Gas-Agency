@@ -46,5 +46,14 @@ fixtures = [
     {
         "dt": "Custom Field",
         "filters": [["module", "=", "Trustbit Gas Agency"]],
-    }
+    },
+    {
+        "dt": "Role",
+        "filters": [["name", "=", "Gas Agency Admin"]],
+    },
+    # Bell alerts to the Gas Agency Admin role on every submitted sale and purchase
+    {
+        "dt": "Notification",
+        "filters": [["module", "=", "Trustbit Gas Agency"]],
+    },
 ]

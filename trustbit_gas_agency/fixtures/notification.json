@@ -1,0 +1,40 @@
+[
+  {
+    "doctype": "Notification",
+    "name": "Admin Alert - Sales Invoice",
+    "enabled": 1,
+    "is_standard": 0,
+    "module": "Trustbit Gas Agency",
+    "channel": "System Notification",
+    "document_type": "Sales Invoice",
+    "event": "Submit",
+    "subject": "{{ \"Sales Return\" if doc.is_return else \"New Sale\" }} {{ doc.name }}: {{ doc.customer_name }}, {{ doc.get_formatted(\"grand_total\") }}",
+    "message_type": "HTML",
+    "message": "<p><b>{{ doc.company }}</b>{% if doc.gas_agency_location %} · {{ doc.gas_agency_location }}{% endif %}</p>\n<p>\nDate: {{ doc.get_formatted(\"posting_date\") }}<br>\nCustomer: {{ doc.customer_name }}<br>\nTotal: {{ doc.get_formatted(\"grand_total\") }}<br>\nOutstanding: {{ doc.get_formatted(\"outstanding_amount\") }}<br>\n{% if doc.pending_empties %}Empties pending: {{ doc.get_formatted(\"pending_empties\") }}<br>{% endif %}\nBy: {{ frappe.get_fullname(doc.owner) }}\n</p>\n<ul>\n{% for row in doc.items %}<li>{{ row.item_name }}: {{ row.get_formatted(\"qty\") }} × {{ row.get_formatted(\"rate\") }}</li>\n{% endfor %}</ul>\n",
+    "recipients": [
+      {
+        "doctype": "Notification Recipient",
+        "receiver_by_role": "Gas Agency Admin"
+      }
+    ]
+  },
+  {
+    "doctype": "Notification",
+    "name": "Admin Alert - Purchase Invoice",
+    "enabled": 1,
+    "is_standard": 0,
+    "module": "Trustbit Gas Agency",
+    "channel": "System Notification",
+    "document_type": "Purchase Invoice",
+    "event": "Submit",
+    "subject": "{{ \"Purchase Return\" if doc.is_return else \"New Purchase\" }} {{ doc.name }}: {{ doc.supplier_name }}, {{ doc.get_formatted(\"grand_total\") }}",
+    "message_type": "HTML",
+    "message": "<p><b>{{ doc.company }}</b></p>\n<p>\nDate: {{ doc.get_formatted(\"posting_date\") }}<br>\nSupplier: {{ doc.supplier_name }}{% if doc.bill_no %} (Bill {{ doc.bill_no }}){% endif %}<br>\nTotal: {{ doc.get_formatted(\"grand_total\") }}<br>\nOutstanding: {{ doc.get_formatted(\"outstanding_amount\") }}<br>\nBy: {{ frappe.get_fullname(doc.owner) }}\n</p>\n<ul>\n{% for row in doc.items %}<li>{{ row.item_name }}: {{ row.get_formatted(\"qty\") }} × {{ row.get_formatted(\"rate\") }}</li>\n{% endfor %}</ul>\n",
+    "recipients": [
+      {
+        "doctype": "Notification Recipient",
+        "receiver_by_role": "Gas Agency Admin"
+      }
+    ]
+  }
+]
