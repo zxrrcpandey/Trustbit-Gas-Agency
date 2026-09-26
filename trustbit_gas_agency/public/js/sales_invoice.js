@@ -33,7 +33,22 @@ frappe.ui.form.on("Sales Invoice", {
             }
         }
     },
+
+    gas_sales_type: function (frm) {
+        // A Surrender is a credit note that brings the cylinders back into
+        // stock; saving applies the same, this shows it while typing
+        if (frm.doc.gas_sales_type !== "Surrender") return;
+        frm.set_value("is_return", 1);
+        frm.set_value("update_stock", 1);
+        (frm.doc.items || []).forEach((row) => make_returned(frm, row));
+    },
 });
+
+function make_returned(frm, row) {
+    if (frm.doc.gas_sales_type === "Surrender" && row.qty > 0) {
+        frappe.model.set_value(row.doctype, row.name, "qty", -row.qty);
+    }
+}
 
 function show_credit_type(frm) {
     const amount_pending = frm.doc.outstanding_amount > 0;
@@ -96,6 +111,10 @@ function receive_empties(frm) {
 }
 
 frappe.ui.form.on("Sales Invoice Item", {
+    qty: function (frm, cdt, cdn) {
+        make_returned(frm, locals[cdt][cdn]);
+    },
+
     item_code: function (frm, cdt, cdn) {
         var row = locals[cdt][cdn];
         if (row.item_code) {

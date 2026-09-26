@@ -88,6 +88,26 @@
     border-left: 4px solid var(--red-500);
 }
 
+.summary-cards.sales-type-cards {
+    margin-bottom: 0;
+}
+
+.summary-card.normal {
+    border-left: 4px solid var(--green-500);
+}
+
+.summary-card.nc {
+    border-left: 4px solid var(--blue-500);
+}
+
+.summary-card.dbc {
+    border-left: 4px solid var(--cyan-500);
+}
+
+.summary-card.surrender {
+    border-left: 4px solid var(--gray-500);
+}
+
 .location-table,
 .exchange-logs-table {
     overflow-x: auto;

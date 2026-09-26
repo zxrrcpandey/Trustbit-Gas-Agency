@@ -166,43 +166,70 @@ def _get_pending_purchase(warehouses):
     )
 
 
+# Security deposits are billed on rows booked to a liability account: money
+# held for the customer, not sales. Joined as `acc` on the invoice item's
+# income account.
+NOT_DEPOSIT = "COALESCE(acc.root_type, '') != 'Liability'"
+
+# Sales Types that sell filled cylinders; a Surrender takes them back
+SELLING_TYPES = ("Normal", "NC", "DBC")
+
+
 def _get_sales(location, cylinders, from_date, to_date):
     """
     Sales in the period on invoices tagged with the location: filled
-    cylinders sold with their KG, and the amount excluding GST. Credit notes
-    carry negative quantities and amounts, so returns net out.
+    cylinders sold with their KG and by Sales Type, and the amount excluding
+    GST and security deposits. Credit notes carry negative quantities and
+    amounts, so returns net out. Cylinders taken back on a Surrender are
+    counted on their own.
     """
     params = {"location": location, "from_date": from_date, "to_date": to_date}
     amount = frappe.db.sql(
-        """
-        SELECT COALESCE(SUM(base_net_total), 0)
-        FROM `tabSales Invoice`
-        WHERE docstatus = 1
-        AND gas_agency_location = %(location)s
-        AND posting_date BETWEEN %(from_date)s AND %(to_date)s
+        f"""
+        SELECT COALESCE(SUM(sii.base_net_amount), 0)
+        FROM `tabSales Invoice Item` sii
+        INNER JOIN `tabSales Invoice` si ON si.name = sii.parent
+        LEFT JOIN `tabAccount` acc ON acc.name = sii.income_account
+        WHERE si.docstatus = 1
+        AND si.gas_agency_location = %(location)s
+        AND si.posting_date BETWEEN %(from_date)s AND %(to_date)s
+        AND {NOT_DEPOSIT}
         """,
         params,
     )[0][0]
 
     rows = frappe.db.sql(
         """
-        SELECT sii.item_code, SUM(sii.stock_qty) AS qty
+        SELECT sii.item_code, COALESCE(NULLIF(si.gas_sales_type, ''), 'Normal') AS sales_type,
+            SUM(sii.stock_qty) AS qty
         FROM `tabSales Invoice Item` sii
         INNER JOIN `tabSales Invoice` si ON si.name = sii.parent
         WHERE si.docstatus = 1
         AND si.gas_agency_location = %(location)s
         AND si.posting_date BETWEEN %(from_date)s AND %(to_date)s
-        GROUP BY sii.item_code
+        GROUP BY sii.item_code, sales_type
         """,
         params,
         as_dict=True,
     )
-    filled_rows = [r for r in rows if r.item_code in cylinders.filled]
-    return {
+    sold = [r for r in rows if r.item_code in cylinders.filled and r.sales_type in SELLING_TYPES]
+    sales = {
         "sales_amount": flt(amount),
-        "sales_qty": sum(flt(r.qty) for r in filled_rows),
-        "sales_kg": sum(flt(r.qty) * cylinders.filled[r.item_code] for r in filled_rows),
+        "sales_qty": sum(flt(r.qty) for r in sold),
+        "sales_kg": sum(flt(r.qty) * cylinders.filled[r.item_code] for r in sold),
+        # A Surrender's rows are returns, so negative
+        "surrender_qty": -sum(
+            flt(r.qty)
+            for r in rows
+            if r.sales_type == "Surrender"
+            and (r.item_code in cylinders.filled or r.item_code in cylinders.empty)
+        ),
     }
+    for sales_type in SELLING_TYPES:
+        sales[sales_type.lower() + "_qty"] = sum(
+            flt(r.qty) for r in sold if r.sales_type == sales_type
+        )
+    return sales
 
 
 def _get_pending_sales(location):
@@ -323,18 +350,21 @@ def _get_empties_movement(location, warehouses, cylinders, from_date, to_date):
 
 
 def _get_daily_sales(locations, from_date, to_date):
-    """Sales amount (excluding GST) for each day of the period across the shown locations."""
+    """Sales amount (excluding GST and deposits) for each day of the period across the shown locations."""
     if not locations:
         return []
 
     rows = frappe.db.sql(
-        """
-        SELECT posting_date, SUM(base_net_total) AS amount
-        FROM `tabSales Invoice`
-        WHERE docstatus = 1
-        AND gas_agency_location IN %(locations)s
-        AND posting_date BETWEEN %(from_date)s AND %(to_date)s
-        GROUP BY posting_date
+        f"""
+        SELECT si.posting_date, SUM(sii.base_net_amount) AS amount
+        FROM `tabSales Invoice Item` sii
+        INNER JOIN `tabSales Invoice` si ON si.name = sii.parent
+        LEFT JOIN `tabAccount` acc ON acc.name = sii.income_account
+        WHERE si.docstatus = 1
+        AND si.gas_agency_location IN %(locations)s
+        AND si.posting_date BETWEEN %(from_date)s AND %(to_date)s
+        AND {NOT_DEPOSIT}
+        GROUP BY si.posting_date
         """,
         {
             "locations": tuple(loc.name for loc in locations),

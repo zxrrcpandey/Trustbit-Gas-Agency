@@ -21,6 +21,9 @@ def process_cylinder_exchange(doc, method):
     if settings.create_exchange_on not in ("Both", doc.doctype):
         return
 
+    if not takes_empties(doc):
+        return
+
     if doc.get("is_return"):
         exchange_items = _collect_return_items(doc, settings)
         purpose = "Material Issue"
@@ -225,6 +228,45 @@ def cancel_cylinder_exchange(doc, method):
     _refresh_pending_empties(doc)
 
 
+def takes_empties(doc):
+    """
+    Only a Normal sale (a refill) swaps the filled cylinders for the
+    customer's empties, and so do its credit notes. NC and DBC cylinders go
+    out with no empty back; a Surrender's cylinders come in on the credit
+    note itself. A Delivery Note has no Sales Type and is always Normal.
+    """
+    return (doc.get("gas_sales_type") or "Normal") == "Normal"
+
+
+def set_sales_type(doc):
+    """
+    A credit note made from an invoice keeps that invoice's Sales Type. A
+    Surrender (connection closed: the customer hands back the cylinder and
+    regulator and gets the deposit back) is a credit note of its own that
+    moves stock, so it is marked as a return with Update Stock, its
+    quantities are made negative, and its empties go to the empty cylinder
+    warehouse like exchanged ones.
+    """
+    if doc.get("return_against"):
+        doc.gas_sales_type = (
+            frappe.db.get_value("Sales Invoice", doc.return_against, "gas_sales_type") or "Normal"
+        )
+
+    if doc.get("gas_sales_type") != "Surrender":
+        return
+
+    doc.is_return = 1
+    doc.update_stock = 1
+    settings = frappe.get_cached_doc("Gas Agency Settings")
+    empty_items = set(
+        frappe.get_all("Cylinder Exchange Rule", filters={"is_active": 1}, pluck="empty_item")
+    )
+    for row in doc.items:
+        row.qty = -abs(flt(row.qty))
+        if row.item_code in empty_items:
+            row.warehouse = _get_target_warehouse(doc, row, settings)
+
+
 def validate_empties_not_received(doc):
     """
     Mark each Sales Invoice row's cylinder rule, and keep Empties Not
@@ -235,7 +277,7 @@ def validate_empties_not_received(doc):
         row.is_gas_cylinder = 1 if rule else 0
         row.cylinder_exchange_rule = rule.name if rule else None
 
-        if not rule or doc.get("is_return"):
+        if not rule or doc.get("is_return") or not takes_empties(doc):
             row.empties_not_received = 0
             continue
 

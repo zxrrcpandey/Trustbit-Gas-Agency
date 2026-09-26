@@ -2,8 +2,14 @@ import frappe
 from trustbit_gas_agency.utils.cylinder_exchange import (
     process_cylinder_exchange,
     cancel_cylinder_exchange,
+    set_sales_type,
     validate_empties_not_received,
 )
+
+
+def before_validate(doc, method):
+    # Before ERPNext's validate, which works out totals and stock qty
+    set_sales_type(doc)
 
 
 def validate(doc, method):

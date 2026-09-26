@@ -82,6 +82,7 @@ function refresh_dashboard(page) {
             return;
         }
         render_summary_cards(page, data.locations || []);
+        render_sales_type_cards(page, data.locations || []);
         render_location_table(page, data.locations || []);
         render_sales_trend(page, data.daily_sales || []);
         render_exchange_logs(page, data.exchange_logs);
@@ -193,6 +194,34 @@ function render_summary_cards(page, locations) {
         });
     }
 
+    append_cards($container, cards);
+}
+
+// Filled cylinders by Sales Type in the period; they add up to the Sales card
+var SALES_TYPE_CARDS = [
+    { label: __("Normal"), field: "normal_qty", note: __("refill cylinders"), cls: "normal" },
+    { label: __("NC"), field: "nc_qty", note: __("new connection cylinders"), cls: "nc" },
+    { label: __("DBC"), field: "dbc_qty", note: __("extra cylinders on a connection"), cls: "dbc" },
+    { label: __("Surrender"), field: "surrender_qty", note: __("cylinders taken back"), cls: "surrender" },
+];
+
+function render_sales_type_cards(page, locations) {
+    var $container = page.main.find(".sales-type-cards");
+    $container.empty();
+    append_cards(
+        $container,
+        SALES_TYPE_CARDS.map(function (card) {
+            return {
+                label: card.label,
+                value: fmt_qty(sum(locations, card.field)),
+                note: card.note,
+                cls: card.cls,
+            };
+        })
+    );
+}
+
+function append_cards($container, cards) {
     cards.forEach(function (card) {
         $container.append(
             '<div class="summary-card ' + card.cls + '">' +
@@ -238,6 +267,9 @@ function render_location_table(page, locations) {
         '<th class="num">' + __("Purchase") + "</th>" +
         '<th class="num">' + __("To Pay") + "</th>" +
         '<th class="num">' + __("Sales") + "</th>" +
+        SALES_TYPE_CARDS.map(function (card) {
+            return '<th class="num">' + card.label + "</th>";
+        }).join("") +
         '<th class="num">' + __("To Collect") + "</th>" +
         '<th class="num">' + __("Empties Pending") + "</th>" +
         '<th class="num">' + __("Collected") + "</th>" +
@@ -267,6 +299,9 @@ function render_location_table(page, locations) {
                 format_currency(row.sales_amount),
                 __("{0} cyl · {1} KG", [fmt_qty(row.sales_qty), fmt_qty(row.sales_kg)])
             ) +
+            SALES_TYPE_CARDS.map(function (card) {
+                return num_cell(fmt_qty(row[card.field]));
+            }).join("") +
             num_cell(format_currency(row.pending_sales)) +
             num_cell(
                 fmt_qty(row.pending_empties),

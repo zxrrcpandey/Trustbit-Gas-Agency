@@ -38,6 +38,12 @@ def get_columns():
             "width": 150,
         },
         {
+            "fieldname": "sales_type",
+            "label": _("Sales Type"),
+            "fieldtype": "Data",
+            "width": 100,
+        },
+        {
             "fieldname": "broker",
             "label": _("Broker"),
             "fieldtype": "Link",
@@ -95,6 +101,7 @@ def get_data(filters):
             "posting_date",
             "customer",
             "gas_agency_location as location",
+            "gas_sales_type as sales_type",
             "broker",
             "grand_total",
             "outstanding_amount",

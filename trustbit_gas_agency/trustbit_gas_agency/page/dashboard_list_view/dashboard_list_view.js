@@ -61,6 +61,7 @@
             columns: [
                 col(__("Date"), function (r) { return fmt_date(r.date); }),
                 col(__("Type"), function (r) { return TYPE_LABELS[r.doctype]; }),
+                col(__("Sales Type"), function (r) { return r.sales_type ? escape_html(__(r.sales_type)) : ""; }),
                 col(__("Document"), function (r) { return doc_link(r.doctype, r.name); }),
                 col(__("Customer"), function (r) { return escape_html(r.party); }),
                 col(__("Amount"), function (r) { return format_currency(r.amount); }, true),
@@ -102,6 +103,7 @@
             columns: [
                 col(__("Date"), function (r) { return fmt_date(r.date); }),
                 col(__("Invoice"), function (r) { return doc_link("Sales Invoice", r.name); }),
+                col(__("Sales Type"), function (r) { return escape_html(__(r.sales_type)); }),
                 col(__("Customer"), function (r) { return escape_html(r.party); }),
                 col(__("Due"), function (r) { return fmt_date(r.due_date); }),
                 col(__("Amount Pending"), function (r) { return format_currency(r.outstanding_amount); }, true),
