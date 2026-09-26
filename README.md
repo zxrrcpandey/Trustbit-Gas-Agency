@@ -1,6 +1,6 @@
 # Trustbit Gas Agency
 
-A Frappe app for an LPG gas agency (client: HP Kapoor) on **ERPNext v15**. When a filled
+A Frappe app for an LPG gas agency on **ERPNext v15**. When a filled
 cylinder is sold, the customer's empty comes back into stock by itself. The app also tracks
 credit sales (money or empties still owed), the four sales types of a gas agency
 (Normal, NC, DBC, Surrender), vehicles and brokers, and gives the owner dashboards and
@@ -11,8 +11,8 @@ bell alerts.
 | Frappe / ERPNext | `>=15,<16` (declared in `pyproject.toml`). v16 is out of scope. |
 | Other apps | none required. The production site also runs india_compliance, which shapes the GST rules below. |
 | Version | `1.1.0` (`__init__.py`). Everything after commit `f6e2298` is unreleased and untagged; see [Changes](#changes). |
-| Production | `https://kvk.trustbit.cloud` (demo data until go-live) |
-| Tester guide | `HP Kapoor/TGA_Tester_Guide_v1.2.pdf` and `.md`, in the project folder next to `App/` |
+| Production | the client's site; its address and access are in Trustbit's private server runbook |
+| Tester guide | `TGA_Tester_Guide_v1.2.pdf` and `.md`, kept in the client's project folder next to `App/` (not in this repo) |
 
 ## What it does
 
@@ -93,8 +93,8 @@ fixtures. Everything else is data:
    Security Deposit* whose Item Defaults point their income account at it. Give them the
    **Nil-Rated** item tax template: india_compliance refuses Non-GST rows on an invoice that
    also has GST rows (*Items not covered under GST cannot be clubbed with items for which
-   GST is applicable*). It also needs an HSN code on every row. On kvk these use 731100 and
-   84811000; the client's CA should confirm the treatment.
+   GST is applicable*). It also needs an HSN code on every row. The production site uses
+   731100 and 84811000; the client's CA should confirm the treatment.
 5. **Gas Vehicle**, **Broker**, and the Gas Agency Admin role for the owner's user.
 
 ## Code map
@@ -120,7 +120,7 @@ already has *Vehicle*.
 
 ## Developing and testing
 
-- The local v15 bench links `apps/trustbit_gas_agency` to this folder. Its site `kvk.local`
+- The local v15 bench links `apps/trustbit_gas_agency` to this folder. Its local site
   has never run the setup wizard, so full invoice flows can't be tested there.
 - Flows are tested on the server with a Python script piped into the site that creates
   documents, asserts the results and calls `frappe.db.rollback()` in `finally`. Stub
@@ -131,15 +131,15 @@ already has *Vehicle*.
 
 ## Deploying
 
-Follow the server runbook `docs/08-kvk-custom-app.md` in the
-[VM-Server-Trustbit](https://github.com/zxrrcpandey/VM-Server-Trustbit) repo. Then on the server:
+Follow the server's custom-app runbook in Trustbit's private server-docs repo. Then, on the
+server (`<site>` is the production site):
 
 ```bash
 export PATH=$HOME/.local/bin:$PATH        # one-shot ssh: bench needs uv on the PATH
 cd ~/frappe-bench
-bench --site kvk.trustbit.cloud backup --with-files
+bench --site <site> backup --with-files
 git -C apps/trustbit_gas_agency pull --ff-only upstream main
-bench --site kvk.trustbit.cloud migrate
+bench --site <site> migrate
 bench build --app trustbit_gas_agency
 sudo supervisorctl restart frappe-bench-web: frappe-bench-workers:
 ```
@@ -147,7 +147,7 @@ sudo supervisorctl restart frappe-bench-web: frappe-bench-workers:
 - **Changed a page's JS or HTML?** Bump `modified` in that page's `.json`. The desk keeps
   page code in the browser's localStorage and only drops it when that stamp changes.
 - **Changed `hooks.py`?** The merged hooks stay cached in redis. Clear just those keys from
-  `bench --site kvk.trustbit.cloud console`: `frappe.cache().delete_keys("hooks")` and
+  `bench --site <site> console`: `frappe.cache().delete_keys("hooks")` and
   `frappe.cache().delete_keys("app_hooks")`.
 - **Don't run `bench clear-cache` on production.** It deletes every redis key for the site.
   Use the targeted clears above.
