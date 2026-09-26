@@ -245,7 +245,8 @@ def set_sales_type(doc):
     regulator and gets the deposit back) is a credit note of its own that
     moves stock, so it is marked as a return with Update Stock, its
     quantities are made negative, and its empties go to the empty cylinder
-    warehouse like exchanged ones.
+    warehouse like exchanged ones. The goods come back at no charge: only
+    the deposit rows (non-stock items) carry the refund.
     """
     if doc.get("return_against"):
         doc.gas_sales_type = (
@@ -263,6 +264,15 @@ def set_sales_type(doc):
     )
     for row in doc.items:
         row.qty = -abs(flt(row.qty))
+        if frappe.get_cached_value("Item", row.item_code, "is_stock_item"):
+            # ERPNext fills a zero rate from the price list, so clear that too
+            row.update({
+                "price_list_rate": 0,
+                "rate": 0,
+                "discount_percentage": 0,
+                "discount_amount": 0,
+                "margin_rate_or_amount": 0,
+            })
         if row.item_code in empty_items:
             row.warehouse = _get_target_warehouse(doc, row, settings)
 
