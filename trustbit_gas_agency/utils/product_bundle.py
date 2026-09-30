@@ -10,11 +10,18 @@ from frappe.utils import flt
 
 @frappe.whitelist()
 def list_product_bundles():
-    """Enabled Product Bundles, for the dialog's dropdown."""
+    """Enabled Product Bundles, for the dialog's dropdown, labelled with the item name."""
     frappe.has_permission("Sales Invoice", "create", throw=True)
-    return frappe.get_all(
-        "Product Bundle", filters={"disabled": 0}, pluck="name", order_by="name asc"
+    bundles = frappe.get_all(
+        "Product Bundle", filters={"disabled": 0}, fields=["name", "new_item_code"], order_by="name asc"
     )
+    labels = []
+    for bundle in bundles:
+        # Items named by series (ITEM-2026-00751) mean nothing at the counter
+        item_name = frappe.get_cached_value("Item", bundle.new_item_code, "item_name")
+        label = bundle.name if item_name in (None, bundle.name) else f"{item_name} ({bundle.name})"
+        labels.append({"value": bundle.name, "label": label})
+    return labels
 
 
 @frappe.whitelist()
