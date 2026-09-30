@@ -64,6 +64,8 @@ An invoice is a credit sale while it owes money (`outstanding_amount`) or emptie
   vehicle and editable per trip.
 - **Admin bell alerts**: role *Gas Agency Admin* gets a notification on every submitted Sales
   and Purchase Invoice (returns are labelled as returns). Bell only; the server has no SMTP.
+- **Get Items From → Product Bundle** on a draft Sales Invoice: pick a bundle and a quantity,
+  and each bundle item is added as its own row with its normal price, tax and income account.
 - **Dashboard Stats** and **Dashboard List View** pages, and the reports **Cylinder Stock
   Summary**, **Location Wise Sales** and **Credit Sales**.
 
@@ -158,6 +160,7 @@ All on `main`; the version stays 1.1.0 until the client signs off and it is tagg
 
 | Date | Commit | Change |
 |---|---|---|
+| 2026-09-30 | `4401fda`, `be8f89d` | Sales Invoice: Get Items From → Product Bundle (bundle items become separate invoice rows) |
 | 2026-09-26 | `69515b5` | Surrender: returned cylinder and regulator carry no charge |
 | 2026-09-26 | `8e7c78e` | Sales Type (Normal, NC, DBC, Surrender); type split on dashboards and reports; deposits left out of sales |
 | 2026-09-26 | `187cbae` | Vehicle, driver name and mobile on Purchase Invoice |
