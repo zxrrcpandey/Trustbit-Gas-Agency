@@ -1,5 +1,13 @@
 frappe.ui.form.on("Sales Invoice", {
     refresh: function (frm) {
+        if (frm.doc.docstatus === 0) {
+            frm.add_custom_button(
+                __("Product Bundle"),
+                () => get_items_from_product_bundle(frm),
+                __("Get Items From")
+            );
+        }
+
         // Show cylinder exchange info if location is set
         if (
             frm.doc.gas_agency_location &&
@@ -43,6 +51,46 @@ frappe.ui.form.on("Sales Invoice", {
         (frm.doc.items || []).forEach((row) => make_returned(frm, row));
     },
 });
+
+function get_items_from_product_bundle(frm) {
+    const method = "trustbit_gas_agency.utils.product_bundle.";
+    frappe.xcall(method + "list_product_bundles").then((bundles) => {
+        if (!bundles.length) {
+            frappe.msgprint(__("No Product Bundle has been set up yet"));
+            return;
+        }
+        const dialog = new frappe.ui.Dialog({
+            title: __("Get Items from Product Bundle"),
+            fields: [
+                {
+                    fieldname: "product_bundle",
+                    fieldtype: "Autocomplete",
+                    label: __("Product Bundle"),
+                    options: bundles,
+                    reqd: 1,
+                },
+                { fieldname: "quantity", fieldtype: "Float", label: __("Quantity"), default: 1, reqd: 1 },
+            ],
+            primary_action_label: __("Get Items"),
+            async primary_action(values) {
+                const items = await frappe.xcall(method + "get_product_bundle_items", values);
+                dialog.hide();
+                // A new invoice starts with one empty row; replace it rather than leave it
+                if ((frm.doc.items || []).every((row) => !row.item_code)) {
+                    frm.clear_table("items");
+                }
+                // Each row goes through ERPNext's own item selection, so price,
+                // warehouse, taxes and income account fill in as if typed
+                for (const item of items) {
+                    const row = frm.add_child("items", { qty: item.qty });
+                    await frappe.model.set_value(row.doctype, row.name, "item_code", item.item_code);
+                }
+                frm.refresh_field("items");
+            },
+        });
+        dialog.show();
+    });
+}
 
 function make_returned(frm, row) {
     if (frm.doc.gas_sales_type === "Surrender" && row.qty > 0) {
